@@ -4,9 +4,10 @@ using Envelope.Services;
 
 namespace Envelope.EntityFrameworkCore;
 
-public abstract class QueryDbContextRepository<TDbContext, TEntity> : QueryRepositoryBase<TEntity>, IQueryRepository<TEntity>
+public abstract class QueryDbContextRepository<TDbContext, TEntity, TIdentity> : QueryRepositoryBase<TEntity, TIdentity>, IQueryRepository<TEntity>
 	where TDbContext : IDbContext
 	where TEntity : IQueryEntity
+	where TIdentity : struct
 {
 	protected TDbContext DbContext { get; private set; }
 

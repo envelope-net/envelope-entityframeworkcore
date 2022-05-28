@@ -10,7 +10,7 @@ using System.Linq.Expressions;
 
 namespace Envelope.EntityFrameworkCore;
 
-public static class IQueryableGlobalCacheExtensions
+public static partial class IQueryableGlobalCacheExtensions
 {
 #pragma warning disable EF1001 // Internal EF Core API usage.
 	private readonly static ConcurrentDictionary<Type, Func<object, object?>?> _relationalQueryContextCache = new();
@@ -62,23 +62,21 @@ public static class IQueryableGlobalCacheExtensions
 		return relationalQueryContext;
 	}
 
-	public static DbContextBase<TIdentity> GetDbContext<TSource, TIdentity>(this IQueryable<TSource> query)
+	public static DbContextBase GetDbContext<TSource>(this IQueryable<TSource> query)
 		where TSource : class
-		where TIdentity : struct
 	{
 		var relationalQueryContext = GetRelationalQueryContext(query);
 
-		if (relationalQueryContext?.Context is not DbContextBase<TIdentity> dbContextBase)
-			throw new NotSupportedException($"Cannot get {nameof(DbContextBase<TIdentity>)} from {query.GetType()?.FullName ?? "NULL"}");
+		if (relationalQueryContext?.Context is not DbContextBase dbContextBase)
+			throw new NotSupportedException($"Cannot get {nameof(DbContextBase)} from {query.GetType()?.FullName ?? "NULL"}");
 
 		return dbContextBase;
 	}
 
-	public static QueryCacheManager GetDbContextQueryCacheManager<TSource, TIdentity>(this IQueryable<TSource> query)
+	public static QueryCacheManager GetDbContextQueryCacheManager<TSource>(this IQueryable<TSource> query)
 		where TSource : class
-		where TIdentity : struct
 	{
-		var dbContext = GetDbContext<TSource, TIdentity>(query);
+		var dbContext = GetDbContext<TSource>(query);
 
 		if (dbContext.QueryCacheManager == null)
 			throw new NotSupportedException($"Cannot get {nameof(QueryCacheManager)} from {query.GetType()?.FullName} >> {dbContext?.GetType()?.FullName ?? "NULL"}");
@@ -86,20 +84,18 @@ public static class IQueryableGlobalCacheExtensions
 		return dbContext.QueryCacheManager;
 	}
 
-	public static bool TryGetDbContext<TSource, TIdentity>(this IQueryable<TSource> query, [NotNullWhen(true)] out DbContextBase<TIdentity>? dbContextBase)
+	public static bool TryGetDbContext<TSource>(this IQueryable<TSource> query, [NotNullWhen(true)] out DbContextBase? dbContextBase)
 		where TSource : class
-		where TIdentity : struct
 	{
 		var relationalQueryContext = GetRelationalQueryContext(query);
-		dbContextBase = relationalQueryContext?.Context as DbContextBase<TIdentity>;
+		dbContextBase = relationalQueryContext?.Context as DbContextBase;
 		return dbContextBase != null;
 	}
 
-	public static bool TryGetDbContextQueryCacheManager<TSource, TIdentity>(this IQueryable<TSource> query, [NotNullWhen(true)] out QueryCacheManager? queryCacheManager)
+	public static bool TryGetDbContextQueryCacheManager<TSource>(this IQueryable<TSource> query, [NotNullWhen(true)] out QueryCacheManager? queryCacheManager)
 		where TSource : class
-		where TIdentity : struct
 	{
-		if (TryGetDbContext(query, out DbContextBase<TIdentity>? dbContext))
+		if (TryGetDbContext(query, out DbContextBase? dbContext))
 			queryCacheManager = dbContext.QueryCacheManager;
 		else
 			queryCacheManager = null;

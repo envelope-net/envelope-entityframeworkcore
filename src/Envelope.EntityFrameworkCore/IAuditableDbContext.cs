@@ -3,9 +3,8 @@ using Envelope.Model.Audit;
 
 namespace Envelope.EntityFrameworkCore;
 
-public interface IAuditableDbContext<TAuditEntry, TIdentity> : IDbContext, IDisposable, IAsyncDisposable
-	where TAuditEntry : class, IAuditEntry<TIdentity>, new()
-	where TIdentity : struct
+public interface IAuditableDbContext<TAuditEntry> : IDbContext, IDisposable, IAsyncDisposable
+	where TAuditEntry : class, IAuditEntry, new()
 {
 	DbSet<TAuditEntry> AuditEntry { get; }
 }

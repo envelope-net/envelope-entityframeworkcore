@@ -4,12 +4,13 @@ using Envelope.Model.Audit;
 
 namespace Envelope.EntityFrameworkCore.Internal;
 
-internal class AuditEntryInternal
+internal class AuditEntryInternal<TIdentity>
+	where TIdentity : struct
 {
 	public EntityEntry Entry { get; }
 
 	public DateTime Created { get; set; }
-	public Guid? IdUser { get; set; }
+	public TIdentity? IdUser { get; set; }
 	public string TableName { get; }
 	public Dictionary<string, object?> KeyValues { get; } = new Dictionary<string, object?>();
 	public Dictionary<string, object?> OldValues { get; } = new Dictionary<string, object?>();
@@ -29,7 +30,7 @@ internal class AuditEntryInternal
 	}
 
 	public TAuditEntry ToAudit<TAuditEntry>(Guid auditCorrelationId)
-		where TAuditEntry : class, IAuditEntry, new()
+		where TAuditEntry : class, IAuditEntry<TIdentity>, new()
 		=> new()
 		{
 			IdUser = IdUser,

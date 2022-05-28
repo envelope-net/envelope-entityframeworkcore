@@ -8,7 +8,8 @@ using Envelope.Database.PostgreSql;
 
 namespace Envelope.EntityFrameworkCore;
 
-public class DbContextCache : IDbContextCache
+public class DbContextCache<TIdentity> : IDbContextCache
+	where TIdentity : struct
 {
 	private readonly ConcurrentDictionary<string, DbContext> _dbContextCache;
 	private readonly ConcurrentDictionary<string, IDbContext> _idbContextCache;
@@ -28,7 +29,7 @@ public class DbContextCache : IDbContextCache
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
 		where TContext : DbContext
-		=> DbContextFactory.CreateNewDbContextWithoutTransaction<TContext>(
+		=> DbContextFactory.CreateNewDbContextWithoutTransaction<TContext, TIdentity>(
 			_serviceProvider,
 			externalDbConnection,
 			connectionString,
@@ -46,8 +47,8 @@ public class DbContextCache : IDbContextCache
 		Guid? idCommandQuery = null)
 		where TContext : DbContext
 	{
-		var dbContext= 
-			DbContextFactory.CreateNewDbContext<TContext>(
+		var dbContext =
+			DbContextFactory.CreateNewDbContext<TContext, TIdentity>(
 				_serviceProvider,
 				out newDbContextTransaction,
 				transactionIsolationLevel,
@@ -72,7 +73,7 @@ public class DbContextCache : IDbContextCache
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
 		where TContext : DbContext
-		=> DbContextFactory.CreateNewDbContext<TContext>(
+		=> DbContextFactory.CreateNewDbContext<TContext, TIdentity>(
 			_serviceProvider,
 			dbContextTransaction,
 			out _,
@@ -136,7 +137,7 @@ public class DbContextCache : IDbContextCache
 			throw new ArgumentNullException(nameof(key));
 
 		var result = _dbContextCache.GetOrAdd(key, (dbContextType)
-	=> DbContextFactory.CreateNewDbContextWithoutTransaction<TContext>(
+	=> DbContextFactory.CreateNewDbContextWithoutTransaction<TContext, TIdentity>(
 			_serviceProvider,
 			externalDbConnection,
 			connectionString,
@@ -164,7 +165,7 @@ public class DbContextCache : IDbContextCache
 			=>
 			{
 				var dbContext =
-					DbContextFactory.CreateNewDbContext<TContext>(
+					DbContextFactory.CreateNewDbContext<TContext, TIdentity>(
 						_serviceProvider,
 						out var newDbContextTransaction,
 						transactionIsolationLevel,
@@ -180,7 +181,7 @@ public class DbContextCache : IDbContextCache
 				}
 
 				return dbContext;
-		}));
+			}));
 
 		return (TContext)result;
 	}
@@ -200,7 +201,7 @@ public class DbContextCache : IDbContextCache
 			throw new ArgumentNullException(nameof(dbContextTransaction));
 
 		var result = _dbContextCache.GetOrAdd(key, (dbContextType)
-			=> DbContextFactory.CreateNewDbContext<TContext>(
+			=> DbContextFactory.CreateNewDbContext<TContext, TIdentity>(
 				_serviceProvider,
 				dbContextTransaction,
 				out _,
@@ -217,7 +218,7 @@ public class DbContextCache : IDbContextCache
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
 		where TContext : IDbContext
-		=> DbContextFactory.CreateNewIDbContextWithoutTransaction<TContext>(
+		=> DbContextFactory.CreateNewIDbContextWithoutTransaction<TContext, TIdentity>(
 			_serviceProvider,
 			externalDbConnection,
 			connectionString,
@@ -236,7 +237,7 @@ public class DbContextCache : IDbContextCache
 		where TContext : IDbContext
 	{
 		var dbContext =
-			DbContextFactory.CreateNewIDbContext<TContext>(
+			DbContextFactory.CreateNewIDbContext<TContext, TIdentity>(
 				_serviceProvider,
 				out newDbContextTransaction,
 				transactionIsolationLevel,
@@ -261,7 +262,7 @@ public class DbContextCache : IDbContextCache
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
 		where TContext : IDbContext
-		=> DbContextFactory.CreateNewIDbContext<TContext>(
+		=> DbContextFactory.CreateNewIDbContext<TContext, TIdentity>(
 			_serviceProvider,
 			dbContextTransaction,
 			out _,
@@ -325,7 +326,7 @@ public class DbContextCache : IDbContextCache
 			throw new ArgumentNullException(nameof(key));
 
 		var result = _idbContextCache.GetOrAdd(key, (dbContextType)
-	=> DbContextFactory.CreateNewIDbContextWithoutTransaction<TContext>(
+	=> DbContextFactory.CreateNewIDbContextWithoutTransaction<TContext, TIdentity>(
 			_serviceProvider,
 			externalDbConnection,
 			connectionString,
@@ -353,7 +354,7 @@ public class DbContextCache : IDbContextCache
 			=>
 		{
 			var dbContext =
-				DbContextFactory.CreateNewIDbContext<TContext>(
+				DbContextFactory.CreateNewIDbContext<TContext, TIdentity>(
 					_serviceProvider,
 					out var newDbContextTransaction,
 					transactionIsolationLevel,
@@ -389,7 +390,7 @@ public class DbContextCache : IDbContextCache
 			throw new ArgumentNullException(nameof(dbContextTransaction));
 
 		var result = _idbContextCache.GetOrAdd(key, (dbContextType)
-			=> DbContextFactory.CreateNewIDbContext<TContext>(
+			=> DbContextFactory.CreateNewIDbContext<TContext, TIdentity>(
 				_serviceProvider,
 				dbContextTransaction,
 				out _,

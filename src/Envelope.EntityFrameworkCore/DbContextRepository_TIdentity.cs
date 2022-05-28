@@ -8,8 +8,9 @@ using System.Data.Common;
 
 namespace Envelope.EntityFrameworkCore;
 
-public abstract class DbContextRepository<TEntity> : RepositoryBase<TEntity>, IRepository<TEntity>
+public abstract class DbContextRepository<TEntity, TIdentity> : RepositoryBase<TEntity, TIdentity>, IRepository<TEntity>
 	where TEntity : IEntity
+	where TIdentity : struct
 {
 	protected IDbContextCache DbContextCache { get; private set; }
 
@@ -30,7 +31,7 @@ public abstract class DbContextRepository<TEntity> : RepositoryBase<TEntity>, IR
 	protected TContext GetOrCreateDbContextWithNewTransaction<TContext>(ITransactionContext? transactionContext = null)
 		where TContext : IDbContext
 	{
-		if (transactionContext is TransactionDbContext transactionDbContext)
+		if (transactionContext is TransactionDbContext<TIdentity> transactionDbContext)
 			return transactionDbContext.GetOrCreateIDbContextWithNewTransaction<TContext>(null, null, null, null, null);
 		else
 			return DbContextCache.GetOrCreateIDbContextWithNewTransaction<TContext>(transactionContext, null, null, null, null, null);

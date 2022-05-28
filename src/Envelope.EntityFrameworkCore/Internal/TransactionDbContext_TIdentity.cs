@@ -7,7 +7,8 @@ using System.Data.Common;
 
 namespace Envelope.EntityFrameworkCore.Internal;
 
-internal class TransactionDbContext : TransactionContext, ITransactionContext, IDisposable, IAsyncDisposable
+internal class TransactionDbContext<TIdentity> : TransactionContext, ITransactionContext, IDisposable, IAsyncDisposable
+	where TIdentity : struct
 {
 	private readonly IServiceProvider _serviceProvider;
 	private readonly IDbContextCache _dbContextCache;
@@ -16,7 +17,7 @@ internal class TransactionDbContext : TransactionContext, ITransactionContext, I
 		: base(configureBehavior, configure)
 	{
 		_serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-		_dbContextCache = new DbContextCache(_serviceProvider);
+		_dbContextCache = new DbContextCache<TIdentity>(_serviceProvider);
 	}
 
 	/// <summary>

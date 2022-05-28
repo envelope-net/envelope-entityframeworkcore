@@ -16,9 +16,10 @@ using Envelope.EntityFrameworkCore.Database;
 
 namespace Envelope.EntityFrameworkCore;
 
-public abstract class DbContextBase : Microsoft.EntityFrameworkCore.DbContext, IDbContext
+public abstract class DbContextBase<TIdentity> : Microsoft.EntityFrameworkCore.DbContext, IDbContext
+	where TIdentity : struct
 {
-	protected readonly IApplicationContext _applicationContext;
+	protected readonly IApplicationContext<TIdentity> _applicationContext;
 	protected readonly ILogger _logger;
 
 	protected DbConnection? ExternalDbConnection { get; private set; }
@@ -57,7 +58,7 @@ public abstract class DbContextBase : Microsoft.EntityFrameworkCore.DbContext, I
 	public string? CommandQueryName { get; internal set; }
 	public Guid? IdCommandQuery { get; internal set; }
 
-	public DbContextBase(DbContextOptions options, ILogger logger, IApplicationContext appContext/*, disabledEtitiesFromAudit, disabledEtityPropertiesFromAudit*/)
+	public DbContextBase(DbContextOptions options, ILogger logger, IApplicationContext<TIdentity> appContext/*, disabledEtitiesFromAudit, disabledEtityPropertiesFromAudit*/)
 		: base(options)
 	{
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -65,7 +66,7 @@ public abstract class DbContextBase : Microsoft.EntityFrameworkCore.DbContext, I
 		QueryCacheManager = new QueryCacheManager(false);
 	}
 
-	protected DbContextBase(ILogger logger, IApplicationContext appContext)
+	protected DbContextBase(ILogger logger, IApplicationContext<TIdentity> appContext)
 		: base()
 	{
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -93,7 +94,7 @@ public abstract class DbContextBase : Microsoft.EntityFrameworkCore.DbContext, I
 			initialized = true;
 		}
 	}
-	
+
 #pragma warning disable CS0809 // Obsolete member overrides non-obsolete member
 	[Obsolete("Use Save() method instead.", true)]
 	public override int SaveChanges()

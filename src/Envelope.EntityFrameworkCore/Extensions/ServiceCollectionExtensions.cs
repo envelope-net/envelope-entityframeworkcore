@@ -6,6 +6,16 @@ namespace Envelope.EntityFrameworkCore.Extensions;
 
 public static class ServiceCollectionExtensions
 {
+	public static IServiceCollection AddDbContextCache(this IServiceCollection services, ServiceLifetime dbContextCacheLifetime = ServiceLifetime.Scoped)
+	{
+		if (services == null)
+			throw new ArgumentNullException(nameof(services));
+
+		services.TryAddTransient<ITransactionContextFactory, TransactionDbContextFactory>();
+		services.TryAdd(new ServiceDescriptor(typeof(IDbContextCache), typeof(DbContextCache), dbContextCacheLifetime));
+		return services;
+	}
+
 	public static IServiceCollection AddDbContextCache<TIdentity>(this IServiceCollection services, ServiceLifetime dbContextCacheLifetime = ServiceLifetime.Scoped)
 		where TIdentity : struct
 	{

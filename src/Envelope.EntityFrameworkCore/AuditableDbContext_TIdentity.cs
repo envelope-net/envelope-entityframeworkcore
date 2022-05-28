@@ -12,18 +12,19 @@ using System.Runtime.CompilerServices;
 
 namespace Envelope.EntityFrameworkCore;
 
-public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditableDbContext<TAuditEntry>, IDbContext, IDisposable, IAsyncDisposable
-	where TAuditEntry : class, IAuditEntry, new()
+public abstract class AuditableDbContext<TAuditEntry, TIdentity> : DbContextBase<TIdentity>, IAuditableDbContext<TAuditEntry, TIdentity>, IDbContext, IDisposable, IAsyncDisposable
+	where TAuditEntry : class, IAuditEntry<TIdentity>, new()
+	where TIdentity : struct
 {
 	public DbSet<TAuditEntry> AuditEntry { get; set; }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-	public AuditableDbContext(DbContextOptions options, ILogger logger, IApplicationContext appContext/*, disabledEtitiesFromAudit, disabledEtityPropertiesFromAudit*/)
+	public AuditableDbContext(DbContextOptions options, ILogger logger, IApplicationContext<TIdentity> appContext/*, disabledEtitiesFromAudit, disabledEtityPropertiesFromAudit*/)
 		: base(options, logger, appContext)
 	{
 	}
 
-	protected AuditableDbContext(ILogger logger, IApplicationContext appContext)
+	protected AuditableDbContext(ILogger logger, IApplicationContext<TIdentity> appContext)
 		: base(logger, appContext)
 	{
 	}
@@ -135,16 +136,16 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 		return result;
 	}
 
-	private List<AuditEntryInternal> OnBeforeSaveChanges(Guid auditCorrelationId, SaveOptions? options)
+	private List<AuditEntryInternal<TIdentity>> OnBeforeSaveChanges(Guid auditCorrelationId, SaveOptions? options)
 	{
 		ChangeTracker.DetectChanges();
 
-		var auditEntries = new List<AuditEntryInternal>();
+		var auditEntries = new List<AuditEntryInternal<TIdentity>>();
 
 		var now = DateTime.Now;
 		foreach (var entry in ChangeTracker.Entries())
 		{
-			if (entry.Entity is IAuditEntry || entry.State == EntityState.Detached || entry.State == EntityState.Unchanged)
+			if (entry.Entity is IAuditEntry<TIdentity> || entry.State == EntityState.Detached || entry.State == EntityState.Unchanged)
 				continue;
 
 			var postModifiedProperties = new List<string>();
@@ -213,7 +214,7 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 				}
 			}
 
-			if (entry.Entity is IAuditable auditable)
+			if (entry.Entity is IAuditable<TIdentity> auditable)
 			{
 				switch (entry.State)
 				{
@@ -235,7 +236,7 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 				}
 			}
 
-			var auditEntry = new AuditEntryInternal(entry)
+			var auditEntry = new AuditEntryInternal<TIdentity>(entry)
 			{
 				IdUser = _applicationContext.TraceInfo.IdUser,
 				Created = now,
@@ -296,7 +297,7 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 		return auditEntries.Where(ae => ae.HasTemporaryProperties).ToList();
 	}
 
-	private void OnAfterSaveChanges(Guid auditCorrelationId, List<AuditEntryInternal> auditEntriesWithTempProperty)
+	private void OnAfterSaveChanges(Guid auditCorrelationId, List<AuditEntryInternal<TIdentity>> auditEntriesWithTempProperty)
 	{
 		foreach (var auditEntry in auditEntriesWithTempProperty)
 		{

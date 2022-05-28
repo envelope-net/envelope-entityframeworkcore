@@ -3,7 +3,8 @@ using Envelope.Transactions;
 
 namespace Envelope.EntityFrameworkCore;
 
-public class TransactionDbContextFactory : ITransactionContextFactory
+public class TransactionDbContextFactory<TIdentity> : ITransactionContextFactory
+	where TIdentity : struct
 {
 	private readonly IServiceProvider _serviceProvider;
 
@@ -13,8 +14,8 @@ public class TransactionDbContextFactory : ITransactionContextFactory
 	}
 
 	public ITransactionContext Create()
-		=> new TransactionDbContext(_serviceProvider, null, null);
+		=> new TransactionDbContext<TIdentity>(_serviceProvider, null, null);
 
 	public ITransactionContext Create(Action<ITransactionBehaviorObserverConnector>? configureBehavior, Action<ITransactionObserverConnector>? configure)
-		=> new TransactionDbContext(_serviceProvider, configureBehavior, configure);
+		=> new TransactionDbContext<TIdentity>(_serviceProvider, configureBehavior, configure);
 }
