@@ -7,7 +7,7 @@ using System.Data.Common;
 
 namespace Envelope.EntityFrameworkCore.Internal;
 
-internal class TransactionDbContext<TIdentity> : TransactionContext, ITransactionContext, IDisposable, IAsyncDisposable
+internal class TransactionDbContext<TIdentity> : TransactionManager, ITransactionManager, IDisposable, IAsyncDisposable
 	where TIdentity : struct
 {
 	private readonly IServiceProvider _serviceProvider;
@@ -68,11 +68,11 @@ internal class TransactionDbContext<TIdentity> : TransactionContext, ITransactio
 
 	//	if (TryAddItem(dbContextTransaction.GetType().FullName!, dbContextTransaction))
 	//	{
-	//		OnCommitted((transactionContext, cancellationToken) => dbContextTransaction.CommitAsync(cancellationToken));
-	//		OnCommitted((transactionContext) => dbContextTransaction.Commit());
-	//		OnRollback((transactionContext, cancellationToken) => dbContextTransaction.RollbackAsync(cancellationToken));
-	//		OnRollback((transactionContext) => dbContextTransaction.Rollback());
-	//		OnDisposed(transactionContext => dbContextTransaction.DisposeAsync());
+	//		OnCommitted((transactionManager, cancellationToken) => dbContextTransaction.CommitAsync(cancellationToken));
+	//		OnCommitted((transactionManager) => dbContextTransaction.Commit());
+	//		OnRollback((transactionManager, cancellationToken) => dbContextTransaction.RollbackAsync(cancellationToken));
+	//		OnRollback((transactionManager) => dbContextTransaction.Rollback());
+	//		OnDisposed(transactionManager => dbContextTransaction.DisposeAsync());
 	//	}
 
 	//	return context;
@@ -174,11 +174,11 @@ internal class TransactionDbContext<TIdentity> : TransactionContext, ITransactio
 
 	//	if (TryAddItem(key, dbContextTransaction))
 	//	{
-	//		OnCommitted((transactionContext, cancellationToken) => dbContextTransaction.CommitAsync(cancellationToken));
-	//		OnCommitted((transactionContext) => dbContextTransaction.Commit());
-	//		OnRollback((transactionContext, cancellationToken) => dbContextTransaction.RollbackAsync(cancellationToken));
-	//		OnRollback((transactionContext) => dbContextTransaction.Rollback());
-	//		OnDisposed(transactionContext => dbContextTransaction.DisposeAsync());
+	//		OnCommitted((transactionManager, cancellationToken) => dbContextTransaction.CommitAsync(cancellationToken));
+	//		OnCommitted((transactionManager) => dbContextTransaction.Commit());
+	//		OnRollback((transactionManager, cancellationToken) => dbContextTransaction.RollbackAsync(cancellationToken));
+	//		OnRollback((transactionManager) => dbContextTransaction.Rollback());
+	//		OnDisposed(transactionManager => dbContextTransaction.DisposeAsync());
 	//	}
 
 	//	return context;
@@ -232,11 +232,11 @@ internal class TransactionDbContext<TIdentity> : TransactionContext, ITransactio
 
 	//	if (TryAddItem(dbContextTransaction.GetType().FullName!, dbContextTransaction))
 	//	{
-	//		OnCommitted((transactionContext, cancellationToken) => dbContextTransaction.CommitAsync(cancellationToken));
-	//		OnCommitted((transactionContext) => dbContextTransaction.Commit());
-	//		OnRollback((transactionContext, cancellationToken) => dbContextTransaction.RollbackAsync(cancellationToken));
-	//		OnRollback((transactionContext) => dbContextTransaction.Rollback());
-	//		OnDisposed(transactionContext => dbContextTransaction.DisposeAsync());
+	//		OnCommitted((transactionManager, cancellationToken) => dbContextTransaction.CommitAsync(cancellationToken));
+	//		OnCommitted((transactionManager) => dbContextTransaction.Commit());
+	//		OnRollback((transactionManager, cancellationToken) => dbContextTransaction.RollbackAsync(cancellationToken));
+	//		OnRollback((transactionManager) => dbContextTransaction.Rollback());
+	//		OnDisposed(transactionManager => dbContextTransaction.DisposeAsync());
 	//	}
 
 	//	return context;
@@ -338,11 +338,11 @@ internal class TransactionDbContext<TIdentity> : TransactionContext, ITransactio
 
 	//	if (TryAddItem(key, dbContextTransaction))
 	//	{
-	//		OnCommitted((transactionContext, cancellationToken) => dbContextTransaction.CommitAsync(cancellationToken));
-	//		OnCommitted((transactionContext) => dbContextTransaction.Commit());
-	//		OnRollback((transactionContext, cancellationToken) => dbContextTransaction.RollbackAsync(cancellationToken));
-	//		OnRollback((transactionContext) => dbContextTransaction.Rollback());
-	//		OnDisposed(transactionContext => dbContextTransaction.DisposeAsync());
+	//		OnCommitted((transactionManager, cancellationToken) => dbContextTransaction.CommitAsync(cancellationToken));
+	//		OnCommitted((transactionManager) => dbContextTransaction.Commit());
+	//		OnRollback((transactionManager, cancellationToken) => dbContextTransaction.RollbackAsync(cancellationToken));
+	//		OnRollback((transactionManager) => dbContextTransaction.Rollback());
+	//		OnDisposed(transactionManager => dbContextTransaction.DisposeAsync());
 	//	}
 
 	//	return context;
