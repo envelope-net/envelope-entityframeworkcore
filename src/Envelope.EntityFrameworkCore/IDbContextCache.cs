@@ -27,7 +27,7 @@ public interface IDbContextCache
 	/// Creates new not cached <see cref="DbContext"/> with new DB transaction
 	/// </summary>
 	/// <param name="newDbContextTransaction">Created DB transaction</param>
-	/// <param name="transactionContext">Register created transaction</param>
+	/// <param name="transactionManager">Register created transaction</param>
 	/// <param name="transactionIsolationLevel">Create DB transaction with <see cref="IsolationLevel"/></param>
 	/// <param name="externalDbConnection">Use external DB connection</param>
 	/// <param name="connectionString">If externalDbConnection is null, use connection string</param>
@@ -36,7 +36,7 @@ public interface IDbContextCache
 	/// <returns>New <see cref="DbContext"/> with new DB transaction</returns>
 	TContext CreateNewDbContextWithNewTransaction<TContext>(
 		out IDbContextTransaction newDbContextTransaction,
-		ITransactionContext? transactionContext = null,
+		ITransactionManager? transactionManager = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
@@ -75,7 +75,7 @@ public interface IDbContextCache
 	/// <summary>
 	/// Creates new cached <see cref="DbContext"/> with new DB transaction
 	/// </summary>
-	/// <param name="transactionContext">Register created transaction</param>
+	/// <param name="transactionManager">Register created transaction</param>
 	/// <param name="transactionIsolationLevel">Create DB transaction with <see cref="IsolationLevel"/></param>
 	/// <param name="externalDbConnection">Use external DB connection</param>
 	/// <param name="connectionString">If externalDbConnection is null, use connection string</param>
@@ -83,7 +83,7 @@ public interface IDbContextCache
 	/// <param name="idCommandQuery"></param>
 	/// <returns>New <see cref="DbContext"/> with new DB transaction</returns>
 	TContext GetOrCreateDbContextWithNewTransaction<TContext>(
-		ITransactionContext? transactionContext = null,
+		ITransactionManager? transactionManager = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
@@ -125,7 +125,7 @@ public interface IDbContextCache
 	/// Creates new cached <see cref="DbContext"/> with new DB transaction
 	/// </summary>
 	/// <param name="key">Cache key. Default is <see cref="DbContext"/>.FullName </param>
-	/// <param name="transactionContext">Register created transaction</param>
+	/// <param name="transactionManager">Register created transaction</param>
 	/// <param name="transactionIsolationLevel">Create DB transaction with <see cref="IsolationLevel"/></param>
 	/// <param name="externalDbConnection">Use external DB connection</param>
 	/// <param name="connectionString">If externalDbConnection is null, use connection string</param>
@@ -134,7 +134,7 @@ public interface IDbContextCache
 	/// <returns>New <see cref="DbContext"/> with new DB transaction</returns>
 	TContext GetOrCreateDbContextWithNewTransaction<TContext>(
 		string key,
-		ITransactionContext? transactionContext = null,
+		ITransactionManager? transactionManager = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
@@ -176,7 +176,7 @@ public interface IDbContextCache
 	/// Creates new not cached <see cref="IDbContext"/> with new DB transaction
 	/// </summary>
 	/// <param name="newDbContextTransaction">Created DB transaction</param>
-	/// <param name="transactionContext">Register created transaction</param>
+	/// <param name="transactionManager">Register created transaction</param>
 	/// <param name="transactionIsolationLevel">Create DB transaction with <see cref="IsolationLevel"/></param>
 	/// <param name="externalDbConnection">Use external DB connection</param>
 	/// <param name="connectionString">If externalDbConnection is null, use connection string</param>
@@ -185,7 +185,7 @@ public interface IDbContextCache
 	/// <returns>New <see cref="IDbContext"/> with new DB transaction</returns>
 	TContext CreateNewIDbContextWithNewTransaction<TContext>(
 		out IDbContextTransaction newDbContextTransaction,
-		ITransactionContext? transactionContext = null,
+		ITransactionManager? transactionManager = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
@@ -224,7 +224,7 @@ public interface IDbContextCache
 	/// <summary>
 	/// Creates new cached <see cref="IDbContext"/> with new DB transaction
 	/// </summary>
-	/// <param name="transactionContext">Register created transaction</param>
+	/// <param name="transactionManager">Register created transaction</param>
 	/// <param name="transactionIsolationLevel">Create DB transaction with <see cref="IsolationLevel"/></param>
 	/// <param name="externalDbConnection">Use external DB connection</param>
 	/// <param name="connectionString">If externalDbConnection is null, use connection string</param>
@@ -232,7 +232,7 @@ public interface IDbContextCache
 	/// <param name="idCommandQuery"></param>
 	/// <returns>New <see cref="IDbContext"/> with new DB transaction</returns>
 	TContext GetOrCreateIDbContextWithNewTransaction<TContext>(
-		ITransactionContext? transactionContext = null,
+		ITransactionManager? transactionManager = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
@@ -274,7 +274,7 @@ public interface IDbContextCache
 	/// Creates new cached <see cref="IDbContext"/> with new DB transaction
 	/// </summary>
 	/// <param name="key">Cache key. Default is <see cref="IDbContext"/>.FullName </param>
-	/// <param name="transactionContext">Register created transaction</param>
+	/// <param name="transactionManager">Register created transaction</param>
 	/// <param name="transactionIsolationLevel">Create DB transaction with <see cref="IsolationLevel"/></param>
 	/// <param name="externalDbConnection">Use external DB connection</param>
 	/// <param name="connectionString">If externalDbConnection is null, use connection string</param>
@@ -283,7 +283,7 @@ public interface IDbContextCache
 	/// <returns>New <see cref="IDbContext"/> with new DB transaction</returns>
 	TContext GetOrCreateIDbContextWithNewTransaction<TContext>(
 		string key,
-		ITransactionContext? transactionContext = null,
+		ITransactionManager? transactionManager = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,

@@ -28,12 +28,12 @@ public abstract class DbContextRepository<TEntity, TIdentity> : RepositoryBase<T
 		where TContext : IDbContext
 		=> DbContextCache.GetOrCreateIDbContextWithExistingTransaction<TContext>(dbContextTransaction, null, null);
 
-	protected TContext GetOrCreateDbContextWithNewTransaction<TContext>(ITransactionContext? transactionContext = null)
+	protected TContext GetOrCreateDbContextWithNewTransaction<TContext>(ITransactionManager? transactionManager = null)
 		where TContext : IDbContext
 	{
-		if (transactionContext is TransactionDbContext<TIdentity> transactionDbContext)
+		if (transactionManager is TransactionDbContext<TIdentity> transactionDbContext)
 			return transactionDbContext.GetOrCreateIDbContextWithNewTransaction<TContext>(null, null, null, null, null);
 		else
-			return DbContextCache.GetOrCreateIDbContextWithNewTransaction<TContext>(transactionContext, null, null, null, null, null);
+			return DbContextCache.GetOrCreateIDbContextWithNewTransaction<TContext>(transactionManager, null, null, null, null, null);
 	}
 }

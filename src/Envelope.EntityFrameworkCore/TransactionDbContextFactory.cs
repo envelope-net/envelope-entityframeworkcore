@@ -3,7 +3,7 @@ using Envelope.Transactions;
 
 namespace Envelope.EntityFrameworkCore;
 
-public class TransactionDbContextFactory : ITransactionContextFactory
+public class TransactionDbContextFactory : ITransactionManagerFactory
 {
 	private readonly IServiceProvider _serviceProvider;
 
@@ -12,9 +12,9 @@ public class TransactionDbContextFactory : ITransactionContextFactory
 		_serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 	}
 
-	public ITransactionContext Create()
+	public ITransactionManager Create()
 		=> new TransactionDbContext(_serviceProvider, null, null);
 
-	public ITransactionContext Create(Action<ITransactionBehaviorObserverConnector>? configureBehavior, Action<ITransactionObserverConnector>? configure)
+	public ITransactionManager Create(Action<ITransactionBehaviorObserverConnector>? configureBehavior, Action<ITransactionObserverConnector>? configure)
 		=> new TransactionDbContext(_serviceProvider, configureBehavior, configure);
 }

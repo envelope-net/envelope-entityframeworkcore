@@ -38,7 +38,7 @@ public class DbContextCache : IDbContextCache
 	/// <inheritdoc />
 	public TContext CreateNewDbContextWithNewTransaction<TContext>(
 		out IDbContextTransaction newDbContextTransaction,
-		ITransactionContext? transactionContext = null,
+		ITransactionManager? transactionManager = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
@@ -56,11 +56,11 @@ public class DbContextCache : IDbContextCache
 				commandQueryName,
 				idCommandQuery);
 
-		if (transactionContext != null)
+		if (transactionManager != null)
 		{
 			var transaction = newDbContextTransaction;
 			var manager = new DbContextTransactionBehaviorObserver(transaction);
-			transactionContext.ConnectTransactionManager(manager);
+			transactionManager.ConnectTransactionObserver(manager);
 		}
 
 		return dbContext;
@@ -95,7 +95,7 @@ public class DbContextCache : IDbContextCache
 
 	/// <inheritdoc />
 	public TContext GetOrCreateDbContextWithNewTransaction<TContext>(
-		ITransactionContext? transactionContext = null,
+		ITransactionManager? transactionManager = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
@@ -104,7 +104,7 @@ public class DbContextCache : IDbContextCache
 		where TContext : DbContext
 		=> GetOrCreateDbContextWithNewTransaction<TContext>(
 			typeof(TContext).FullName!,
-			transactionContext,
+			transactionManager,
 			transactionIsolationLevel,
 			externalDbConnection,
 			connectionString,
@@ -149,7 +149,7 @@ public class DbContextCache : IDbContextCache
 	/// <inheritdoc />
 	public TContext GetOrCreateDbContextWithNewTransaction<TContext>(
 		string key,
-		ITransactionContext? transactionContext = null,
+		ITransactionManager? transactionManager = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
@@ -173,10 +173,10 @@ public class DbContextCache : IDbContextCache
 						commandQueryName,
 						idCommandQuery);
 
-				if (transactionContext != null)
+				if (transactionManager != null)
 				{
 					var manager = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
-					transactionContext.ConnectTransactionManager(manager);
+					transactionManager.ConnectTransactionObserver(manager);
 				}
 
 				return dbContext;
@@ -227,7 +227,7 @@ public class DbContextCache : IDbContextCache
 	/// <inheritdoc />
 	public TContext CreateNewIDbContextWithNewTransaction<TContext>(
 		out IDbContextTransaction newDbContextTransaction,
-		ITransactionContext? transactionContext = null,
+		ITransactionManager? transactionManager = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
@@ -245,11 +245,11 @@ public class DbContextCache : IDbContextCache
 				commandQueryName,
 				idCommandQuery);
 
-		if (transactionContext != null)
+		if (transactionManager != null)
 		{
 			var transaction = newDbContextTransaction;
 			var manager = new DbContextTransactionBehaviorObserver(transaction);
-			transactionContext.ConnectTransactionManager(manager);
+			transactionManager.ConnectTransactionObserver(manager);
 		}
 
 		return dbContext;
@@ -284,7 +284,7 @@ public class DbContextCache : IDbContextCache
 
 	/// <inheritdoc />
 	public TContext GetOrCreateIDbContextWithNewTransaction<TContext>(
-		ITransactionContext? transactionContext = null,
+		ITransactionManager? transactionManager = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
@@ -293,7 +293,7 @@ public class DbContextCache : IDbContextCache
 		where TContext : IDbContext
 		=> GetOrCreateIDbContextWithNewTransaction<TContext>(
 			typeof(TContext).FullName!,
-			transactionContext,
+			transactionManager,
 			transactionIsolationLevel,
 			externalDbConnection,
 			connectionString,
@@ -338,7 +338,7 @@ public class DbContextCache : IDbContextCache
 	/// <inheritdoc />
 	public TContext GetOrCreateIDbContextWithNewTransaction<TContext>(
 		string key,
-		ITransactionContext? transactionContext = null,
+		ITransactionManager? transactionManager = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
@@ -349,7 +349,7 @@ public class DbContextCache : IDbContextCache
 		if (string.IsNullOrWhiteSpace(key))
 			throw new ArgumentNullException(nameof(key));
 
-		var result = _idbContextCache.GetOrAdd(key, (Func<string, IDbContext>)((dbContextType)
+		var result = _idbContextCache.GetOrAdd(key, ((dbContextType)
 			=>
 		{
 			var dbContext =
@@ -362,10 +362,10 @@ public class DbContextCache : IDbContextCache
 					commandQueryName,
 					idCommandQuery);
 
-			if (transactionContext != null)
+			if (transactionManager != null)
 			{
 				var manager = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
-				transactionContext.ConnectTransactionManager(manager);
+				transactionManager.ConnectTransactionObserver(manager);
 			}
 
 			return dbContext;
