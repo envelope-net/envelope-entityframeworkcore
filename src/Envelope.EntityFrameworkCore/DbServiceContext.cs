@@ -8,12 +8,12 @@ using System.Data.Common;
 
 namespace Envelope.EntityFrameworkCore;
 
-public abstract class DbContextRepository<TEntity> : RepositoryBase<TEntity>, IRepository<TEntity>
+public abstract class DbServiceContext<TEntity> : ServiceBase<TEntity>, IService<TEntity>
 	where TEntity : IEntity
 {
 	protected IDbContextCache DbContextCache { get; private set; }
 
-	public DbContextRepository(IDbContextCache dbContextCache, ILogger logger)
+	public DbServiceContext(IDbContextCache dbContextCache, ILogger logger)
 		: base(logger)
 	{
 		DbContextCache = dbContextCache ?? throw new ArgumentNullException(nameof(dbContextCache));
