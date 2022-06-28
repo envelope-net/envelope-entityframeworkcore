@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Envelope.EntityFrameworkCore.Audit;
+using Envelope.Model;
 using Envelope.Model.Audit;
 
 namespace Envelope.EntityFrameworkCore.Internal;
