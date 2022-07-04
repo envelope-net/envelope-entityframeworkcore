@@ -56,7 +56,7 @@ public class DbContextCache : IDbContextCache
 				commandQueryName,
 				idCommandQuery);
 
-		if (transactionManager != null)
+		if (transactionManager != null && newDbContextTransaction != null)
 		{
 			var transaction = newDbContextTransaction;
 			var manager = new DbContextTransactionBehaviorObserver(transaction);
@@ -69,15 +69,50 @@ public class DbContextCache : IDbContextCache
 	/// <inheritdoc />
 	public TContext CreateNewDbContextWithExistingTransaction<TContext>(
 		IDbContextTransaction dbContextTransaction,
+		ITransactionManager? transactionManager = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
 		where TContext : DbContext
-		=> DbContextFactory.CreateNewDbContext<TContext>(
+	{
+		var result = DbContextFactory.CreateNewDbContext<TContext>(
 			_serviceProvider,
 			dbContextTransaction,
-			out _,
+			out var newDbContextTransaction,
 			commandQueryName,
 			idCommandQuery);
+
+		if (transactionManager != null && newDbContextTransaction != null)
+		{
+			var manager = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+			transactionManager.ConnectTransactionObserver(manager);
+		}
+
+		return result;
+	}
+
+	/// <inheritdoc />
+	public TContext CreateNewDbContextWithExistingTransaction<TContext>(
+		DbTransaction dbTransaction,
+		ITransactionManager? transactionManager = null,
+		string? commandQueryName = null,
+		Guid? idCommandQuery = null)
+		where TContext : DbContext
+	{
+		var result = DbContextFactory.CreateNewDbContext<TContext>(
+			_serviceProvider,
+			dbTransaction,
+			out var newDbContextTransaction,
+			commandQueryName,
+			idCommandQuery);
+
+		if (transactionManager != null && newDbContextTransaction != null)
+		{
+			var manager = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+			transactionManager.ConnectTransactionObserver(manager);
+		}
+
+		return result;
+	}
 
 	/// <inheritdoc />
 	public TContext GetOrCreateDbContextWithoutTransaction<TContext>(
@@ -114,12 +149,28 @@ public class DbContextCache : IDbContextCache
 	/// <inheritdoc />
 	public TContext GetOrCreateDbContextWithExistingTransaction<TContext>(
 		IDbContextTransaction dbContextTransaction,
+		ITransactionManager? transactionManager = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
 		where TContext : DbContext
 		=> GetOrCreateDbContextWithExistingTransaction<TContext>(
 			typeof(TContext).FullName!,
 			dbContextTransaction,
+			transactionManager,
+			commandQueryName,
+			idCommandQuery);
+
+	/// <inheritdoc />
+	public TContext GetOrCreateDbContextWithExistingTransaction<TContext>(
+		DbTransaction dbTransaction,
+		ITransactionManager? transactionManager = null,
+		string? commandQueryName = null,
+		Guid? idCommandQuery = null)
+		where TContext : DbContext
+		=> GetOrCreateDbContextWithExistingTransaction<TContext>(
+			typeof(TContext).FullName!,
+			dbTransaction,
+			transactionManager,
 			commandQueryName,
 			idCommandQuery);
 
@@ -135,13 +186,15 @@ public class DbContextCache : IDbContextCache
 		if (string.IsNullOrWhiteSpace(key))
 			throw new ArgumentNullException(nameof(key));
 
-		var result = _dbContextCache.GetOrAdd(key, (dbContextType)
-	=> DbContextFactory.CreateNewDbContextWithoutTransaction<TContext>(
-			_serviceProvider,
-			externalDbConnection,
-			connectionString,
-			commandQueryName,
-			idCommandQuery));
+		var result = _dbContextCache.GetOrAdd(
+			key,
+			dbContextType =>
+				DbContextFactory.CreateNewDbContextWithoutTransaction<TContext>(
+					_serviceProvider,
+					externalDbConnection,
+					connectionString,
+					commandQueryName,
+					idCommandQuery));
 
 		return (TContext)result;
 	}
@@ -173,7 +226,7 @@ public class DbContextCache : IDbContextCache
 						commandQueryName,
 						idCommandQuery);
 
-				if (transactionManager != null)
+				if (transactionManager != null && newDbContextTransaction != null)
 				{
 					var manager = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
 					transactionManager.ConnectTransactionObserver(manager);
@@ -189,6 +242,7 @@ public class DbContextCache : IDbContextCache
 	public TContext GetOrCreateDbContextWithExistingTransaction<TContext>(
 		string key,
 		IDbContextTransaction dbContextTransaction,
+		ITransactionManager? transactionManager = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
 		where TContext : DbContext
@@ -200,14 +254,74 @@ public class DbContextCache : IDbContextCache
 			throw new ArgumentNullException(nameof(dbContextTransaction));
 
 		var result = _dbContextCache.GetOrAdd(key, (dbContextType)
-			=> DbContextFactory.CreateNewDbContext<TContext>(
-				_serviceProvider,
-				dbContextTransaction,
-				out _,
-				commandQueryName,
-				idCommandQuery));
+			=>
+		{
+			var dbContext = DbContextFactory.CreateNewDbContext<TContext>(
+					_serviceProvider,
+					dbContextTransaction,
+					out var newDbContextTransaction,
+					commandQueryName,
+					idCommandQuery);
+
+			if (transactionManager != null && newDbContextTransaction != null)
+			{
+				var manager = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+				transactionManager.ConnectTransactionObserver(manager);
+			}
+
+			return dbContext;
+		});
 
 		return (TContext)result;
+	}
+
+	/// <inheritdoc />
+	public TContext GetOrCreateDbContextWithExistingTransaction<TContext>(
+		string key,
+		DbTransaction dbTransaction,
+		ITransactionManager? transactionManager = null,
+		string? commandQueryName = null,
+		Guid? idCommandQuery = null)
+		where TContext : DbContext
+	{
+		if (string.IsNullOrWhiteSpace(key))
+			throw new ArgumentNullException(nameof(key));
+
+		if (dbTransaction == null)
+			throw new ArgumentNullException(nameof(dbTransaction));
+
+		var result = _dbContextCache.GetOrAdd(key, (dbContextType)
+			=>
+		{
+			var dbContext = DbContextFactory.CreateNewDbContext<TContext>(
+					_serviceProvider,
+					dbTransaction,
+					out var newDbContextTransaction,
+					commandQueryName,
+					idCommandQuery);
+
+			if (transactionManager != null && newDbContextTransaction != null)
+			{
+				var manager = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+				transactionManager.ConnectTransactionObserver(manager);
+			}
+
+			return dbContext;
+		});
+
+		return (TContext)result;
+	}
+
+	public IDbContextTransaction? GetDbContextTransaction<TContext>()
+		where TContext : DbContext
+		=> GetDbContextTransaction(typeof(TContext).FullName!);
+
+	public IDbContextTransaction? GetDbContextTransaction(string key)
+	{
+		if (_dbContextCache.TryGetValue(key, out DbContext? dbContext))
+			return dbContext.Database.CurrentTransaction;
+
+		return null;
 	}
 
 	/// <inheritdoc />
@@ -245,7 +359,7 @@ public class DbContextCache : IDbContextCache
 				commandQueryName,
 				idCommandQuery);
 
-		if (transactionManager != null)
+		if (transactionManager != null && newDbContextTransaction != null)
 		{
 			var transaction = newDbContextTransaction;
 			var manager = new DbContextTransactionBehaviorObserver(transaction);
@@ -258,15 +372,50 @@ public class DbContextCache : IDbContextCache
 	/// <inheritdoc />
 	public TContext CreateNewIDbContextWithExistingTransaction<TContext>(
 		IDbContextTransaction dbContextTransaction,
+		ITransactionManager? transactionManager = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
 		where TContext : IDbContext
-		=> DbContextFactory.CreateNewIDbContext<TContext>(
+	{
+		var result = DbContextFactory.CreateNewIDbContext<TContext>(
 			_serviceProvider,
 			dbContextTransaction,
-			out _,
+			out var newDbContextTransaction,
 			commandQueryName,
 			idCommandQuery);
+
+		if (transactionManager != null && newDbContextTransaction != null)
+		{
+			var manager = new DbContextTransactionBehaviorObserver(newDbContextTransaction!);
+			transactionManager.ConnectTransactionObserver(manager);
+		}
+
+		return result;
+	}
+
+	/// <inheritdoc />
+	public TContext CreateNewIDbContextWithExistingTransaction<TContext>(
+		DbTransaction dbTransaction,
+		ITransactionManager? transactionManager = null,
+		string? commandQueryName = null,
+		Guid? idCommandQuery = null)
+		where TContext : IDbContext
+	{
+		var result = DbContextFactory.CreateNewIDbContext<TContext>(
+			_serviceProvider,
+			dbTransaction,
+			out var newDbContextTransaction,
+			commandQueryName,
+			idCommandQuery);
+
+		if (transactionManager != null && newDbContextTransaction != null)
+		{
+			var manager = new DbContextTransactionBehaviorObserver(newDbContextTransaction!);
+			transactionManager.ConnectTransactionObserver(manager);
+		}
+
+		return result;
+	}
 
 	/// <inheritdoc />
 	public TContext GetOrCreateIDbContextWithoutTransaction<TContext>(
@@ -303,12 +452,28 @@ public class DbContextCache : IDbContextCache
 	/// <inheritdoc />
 	public TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
 		IDbContextTransaction dbContextTransaction,
+		ITransactionManager? transactionManager = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
 		where TContext : IDbContext
 		=> GetOrCreateIDbContextWithExistingTransaction<TContext>(
 			typeof(TContext).FullName!,
 			dbContextTransaction,
+			transactionManager,
+			commandQueryName,
+			idCommandQuery);
+
+	/// <inheritdoc />
+	public TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
+		DbTransaction dbTransaction,
+		ITransactionManager? transactionManager = null,
+		string? commandQueryName = null,
+		Guid? idCommandQuery = null)
+		where TContext : IDbContext
+		=> GetOrCreateIDbContextWithExistingTransaction<TContext>(
+			typeof(TContext).FullName!,
+			dbTransaction,
+			transactionManager,
 			commandQueryName,
 			idCommandQuery);
 
@@ -324,13 +489,15 @@ public class DbContextCache : IDbContextCache
 		if (string.IsNullOrWhiteSpace(key))
 			throw new ArgumentNullException(nameof(key));
 
-		var result = _idbContextCache.GetOrAdd(key, (dbContextType)
-	=> DbContextFactory.CreateNewIDbContextWithoutTransaction<TContext>(
-			_serviceProvider,
-			externalDbConnection,
-			connectionString,
-			commandQueryName,
-			idCommandQuery));
+		var result = _idbContextCache.GetOrAdd(
+			key,
+			dbContextType =>
+				DbContextFactory.CreateNewIDbContextWithoutTransaction<TContext>(
+					_serviceProvider,
+					externalDbConnection,
+					connectionString,
+					commandQueryName,
+					idCommandQuery));
 
 		return (TContext)result;
 	}
@@ -349,27 +516,27 @@ public class DbContextCache : IDbContextCache
 		if (string.IsNullOrWhiteSpace(key))
 			throw new ArgumentNullException(nameof(key));
 
-		var result = _idbContextCache.GetOrAdd(key, ((dbContextType)
+		var result = _idbContextCache.GetOrAdd(key, dbContextType
 			=>
-		{
-			var dbContext =
-				DbContextFactory.CreateNewIDbContext<TContext>(
-					_serviceProvider,
-					out var newDbContextTransaction,
-					transactionIsolationLevel,
-					externalDbConnection,
-					connectionString,
-					commandQueryName,
-					idCommandQuery);
-
-			if (transactionManager != null)
 			{
-				var manager = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
-				transactionManager.ConnectTransactionObserver(manager);
-			}
+				var dbContext =
+					DbContextFactory.CreateNewIDbContext<TContext>(
+						_serviceProvider,
+						out var newDbContextTransaction,
+						transactionIsolationLevel,
+						externalDbConnection,
+						connectionString,
+						commandQueryName,
+						idCommandQuery);
 
-			return dbContext;
-		}));
+				if (transactionManager != null && newDbContextTransaction != null)
+				{
+					var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+					transactionManager.ConnectTransactionObserver(observer);
+				}
+
+				return dbContext;
+			});
 
 		return (TContext)result;
 	}
@@ -378,6 +545,7 @@ public class DbContextCache : IDbContextCache
 	public TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
 		string key,
 		IDbContextTransaction dbContextTransaction,
+		ITransactionManager? transactionManager = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
 		where TContext : IDbContext
@@ -388,14 +556,76 @@ public class DbContextCache : IDbContextCache
 		if (dbContextTransaction == null)
 			throw new ArgumentNullException(nameof(dbContextTransaction));
 
-		var result = _idbContextCache.GetOrAdd(key, (dbContextType)
-			=> DbContextFactory.CreateNewIDbContext<TContext>(
-				_serviceProvider,
-				dbContextTransaction,
-				out _,
-				commandQueryName,
-				idCommandQuery));
+		var result = _idbContextCache.GetOrAdd(
+			key,
+			dbContextType =>
+			{
+				var dbContext = DbContextFactory.CreateNewIDbContext<TContext>(
+					_serviceProvider,
+					dbContextTransaction,
+					out var newDbContextTransaction,
+					commandQueryName,
+					idCommandQuery);
+
+				if (transactionManager != null && newDbContextTransaction != null)
+				{
+					var manager = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+					transactionManager.ConnectTransactionObserver(manager);
+				}
+
+				return dbContext;
+			});
 
 		return (TContext)result;
+	}
+
+	/// <inheritdoc />
+	public TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
+		string key,
+		DbTransaction dbTransaction,
+		ITransactionManager? transactionManager = null,
+		string? commandQueryName = null,
+		Guid? idCommandQuery = null)
+		where TContext : IDbContext
+	{
+		if (string.IsNullOrWhiteSpace(key))
+			throw new ArgumentNullException(nameof(key));
+
+		if (dbTransaction == null)
+			throw new ArgumentNullException(nameof(dbTransaction));
+
+		var result = _idbContextCache.GetOrAdd(
+			key,
+			dbContextType =>
+			{
+				var dbContext = DbContextFactory.CreateNewIDbContext<TContext>(
+					_serviceProvider,
+					dbTransaction,
+					out var newDbContextTransaction,
+					commandQueryName,
+					idCommandQuery);
+
+				if (transactionManager != null && newDbContextTransaction != null)
+				{
+					var manager = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+					transactionManager.ConnectTransactionObserver(manager);
+				}
+
+				return dbContext;
+			});
+
+		return (TContext)result;
+	}
+
+	public IDbContextTransaction? GetIDbContextTransaction<TContext>()
+		where TContext : IDbContext
+		=> GetIDbContextTransaction(typeof(TContext).FullName!);
+
+	public IDbContextTransaction? GetIDbContextTransaction(string key)
+	{
+		if (_dbContextCache.TryGetValue(key, out DbContext? dbContext))
+			return dbContext.Database.CurrentTransaction;
+
+		return null;
 	}
 }

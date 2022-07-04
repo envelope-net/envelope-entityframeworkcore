@@ -40,7 +40,7 @@ public abstract class DbContextBase<TIdentity> : Microsoft.EntityFrameworkCore.D
 	}
 
 	public IDbContextTransaction? DbContextTransaction => Database?.CurrentTransaction;
-	public IDbTransaction? DbTransaction => Database?.CurrentTransaction?.GetDbTransaction();
+	public DbTransaction? DbTransaction => Database?.CurrentTransaction?.GetDbTransaction();
 
 	private string? _dbConnectionString;
 	public string DBConnectionString
@@ -370,6 +370,18 @@ public abstract class DbContextBase<TIdentity> : Microsoft.EntityFrameworkCore.D
 		=> DbContextFactory.SetDbTransaction(
 			this,
 			existingDbContextTransaction,
+			out newDbContextTransaction,
+			transactionUsage,
+			transactionIsolationLevel);
+
+	public void SetDbTransaction(
+		DbTransaction? existingTransaction,
+		out IDbContextTransaction? newDbContextTransaction,
+		TransactionUsage transactionUsage,
+		IsolationLevel? transactionIsolationLevel)
+		=> DbContextFactory.SetDbTransaction(
+			this,
+			existingTransaction,
 			out newDbContextTransaction,
 			transactionUsage,
 			transactionIsolationLevel);

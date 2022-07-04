@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Envelope.Converters;
-using Envelope.EntityFrameworkCore.Audit;
+using Envelope.Model;
 using Envelope.EntityFrameworkCore.Internal;
 using Envelope.Model.Audit;
 using Envelope.Model.Concurrence;
