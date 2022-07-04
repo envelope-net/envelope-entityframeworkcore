@@ -6,12 +6,12 @@ using System.Data.Common;
 
 namespace Envelope.EntityFrameworkCore.Internal;
 
-internal class TransactionDbContext : TransactionManager, ITransactionManager, IDisposable, IAsyncDisposable
+internal class DbTransactionManager : TransactionManager, ITransactionManager, IDisposable, IAsyncDisposable
 {
 	private readonly IServiceProvider _serviceProvider;
 	private readonly IDbContextCache _dbContextCache;
 
-	protected internal TransactionDbContext(
+	protected internal DbTransactionManager(
 		IServiceProvider serviceProvider,
 		Action<ITransactionBehaviorObserverConnector>? configureBehavior,
 		Action<ITransactionObserverConnector>? configure)

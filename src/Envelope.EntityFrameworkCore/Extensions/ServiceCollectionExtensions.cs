@@ -11,7 +11,8 @@ public static class ServiceCollectionExtensions
 		if (services == null)
 			throw new ArgumentNullException(nameof(services));
 
-		services.TryAddTransient<ITransactionManagerFactory, TransactionDbContextFactory>();
+		services.TryAddTransient<ITransactionManagerFactory, DbTransactionManagerFactory>();
+		services.TryAdd(new ServiceDescriptor(typeof(IDbContextProvider), typeof(DbContextProvider), dbContextCacheLifetime));
 		services.TryAdd(new ServiceDescriptor(typeof(IDbContextCache), typeof(DbContextCache), dbContextCacheLifetime));
 		return services;
 	}
@@ -23,6 +24,7 @@ public static class ServiceCollectionExtensions
 			throw new ArgumentNullException(nameof(services));
 
 		services.TryAddTransient<ITransactionManagerFactory, TransactionDbContextFactory<TIdentity>>();
+		services.TryAdd(new ServiceDescriptor(typeof(IDbContextProvider), typeof(DbContextProvider<TIdentity>), dbContextCacheLifetime));
 		services.TryAdd(new ServiceDescriptor(typeof(IDbContextCache), typeof(DbContextCache<TIdentity>), dbContextCacheLifetime));
 		return services;
 	}

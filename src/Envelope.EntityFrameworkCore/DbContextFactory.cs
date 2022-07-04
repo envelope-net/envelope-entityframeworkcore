@@ -37,6 +37,33 @@ public static partial class DbContextFactory
 
 	public static TContext CreateNewDbContext<TContext>(
 		IServiceProvider serviceProvider,
+		DbTransaction existingDbTransaction,
+		out IDbContextTransaction? newDbContextTransaction,
+		string? commandQueryName = null,
+		Guid? idCommandQuery = null)
+		where TContext : DbContext
+	{
+		if (serviceProvider == null)
+			throw new ArgumentNullException(nameof(serviceProvider));
+
+		if (existingDbTransaction == null)
+			throw new ArgumentNullException(nameof(existingDbTransaction));
+
+		var dbContext = serviceProvider.GetRequiredService<TContext>();
+		if (dbContext is DbContextBase dbContextBase)
+		{
+			dbContextBase.CommandQueryName = commandQueryName;
+			dbContextBase.IdCommandQuery = idCommandQuery;
+			dbContextBase.SetExternalConnection(
+				existingDbTransaction.Connection,
+				null);
+		}
+
+		return SetDbTransaction(dbContext, existingDbTransaction, out newDbContextTransaction, TransactionUsage.Reuse, null);
+	}
+
+	public static TContext CreateNewDbContext<TContext>(
+		IServiceProvider serviceProvider,
 		out IDbContextTransaction newDbContextTransaction,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
@@ -56,7 +83,7 @@ public static partial class DbContextFactory
 			dbContextBase.SetExternalConnection(externalDbConnection, connectionString);
 		}
 
-		return SetDbTransaction(dbContext, null, out newDbContextTransaction!, TransactionUsage.CreateNew, transactionIsolationLevel);
+		return SetDbTransaction(dbContext, (IDbContextTransaction)null!, out newDbContextTransaction!, TransactionUsage.CreateNew, transactionIsolationLevel);
 	}
 
 	public static TContext CreateNewDbContextWithoutTransaction<TContext>(
@@ -156,6 +183,81 @@ public static partial class DbContextFactory
 		return dbContext;
 	}
 
+	public static TContext SetDbTransaction<TContext>(
+		TContext dbContext,
+		DbTransaction? existingTransaction,
+		out IDbContextTransaction? newDbContextTransaction,
+		TransactionUsage transactionUsage,
+		IsolationLevel? transactionIsolationLevel)
+		where TContext : DbContext
+	{
+		newDbContextTransaction = null;
+
+		if (dbContext == null)
+			throw new ArgumentNullException(nameof(dbContext));
+
+		if (transactionUsage == TransactionUsage.NONE)
+			return dbContext;
+
+		if (transactionUsage == TransactionUsage.Reuse)
+		{
+			if (existingTransaction == null)
+			{
+				throw new ArgumentNullException(nameof(existingTransaction));
+
+				//if (transactionIsolationLevel.HasValue)
+				//{
+				//	newDbContextTransaction = dbContext.Database.BeginTransaction(transactionIsolationLevel.Value);
+				//}
+				//else
+				//{
+				//	newDbContextTransaction = dbContext.Database.BeginTransaction();
+				//}
+
+				//return dbContext;
+			}
+			else
+			{
+				if (dbContext.Database.CurrentTransaction == null)
+				{
+					dbContext.Database.UseTransaction(existingTransaction);
+					newDbContextTransaction = dbContext.Database.CurrentTransaction;
+					return dbContext;
+				}
+				else
+				{
+					if (dbContext.Database.CurrentTransaction.GetDbTransaction() != existingTransaction)
+						throw new InvalidOperationException($"DbContext already has set another transaction with id {dbContext.Database.CurrentTransaction.TransactionId}");
+
+					return dbContext;
+				}
+			}
+		}
+
+		if (transactionUsage == TransactionUsage.CreateNew)
+		{
+			if (dbContext.Database.CurrentTransaction == null)
+			{
+				if (transactionIsolationLevel.HasValue)
+				{
+					newDbContextTransaction = dbContext.Database.BeginTransaction(transactionIsolationLevel.Value);
+				}
+				else
+				{
+					newDbContextTransaction = dbContext.Database.BeginTransaction();
+				}
+
+				return dbContext;
+			}
+			else
+			{
+				throw new InvalidOperationException($"DbContext already has set another transaction with id {dbContext.Database.CurrentTransaction.TransactionId}");
+			}
+		}
+
+		return dbContext;
+	}
+
 	public static TContext CreateNewIDbContext<TContext>(
 		IServiceProvider serviceProvider,
 		IDbContextTransaction existingDbContextTransaction,
@@ -187,6 +289,33 @@ public static partial class DbContextFactory
 
 	public static TContext CreateNewIDbContext<TContext>(
 		IServiceProvider serviceProvider,
+		DbTransaction existingTransaction,
+		out IDbContextTransaction? newDbContextTransaction,
+		string? commandQueryName = null,
+		Guid? idCommandQuery = null)
+		where TContext : IDbContext
+	{
+		if (serviceProvider == null)
+			throw new ArgumentNullException(nameof(serviceProvider));
+
+		if (existingTransaction == null)
+			throw new ArgumentNullException(nameof(existingTransaction));
+
+		var dbContext = serviceProvider.GetRequiredService<TContext>();
+		if (dbContext is DbContextBase dbContextBase)
+		{
+			dbContextBase.CommandQueryName = commandQueryName;
+			dbContextBase.IdCommandQuery = idCommandQuery;
+			dbContextBase.SetExternalConnection(existingTransaction.Connection, null);
+		}
+
+		dbContext.SetDbTransaction(existingTransaction, out newDbContextTransaction, TransactionUsage.Reuse, null);
+
+		return dbContext;
+	}
+
+	public static TContext CreateNewIDbContext<TContext>(
+		IServiceProvider serviceProvider,
 		out IDbContextTransaction newDbContextTransaction,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
@@ -206,7 +335,7 @@ public static partial class DbContextFactory
 			dbContextBase.SetExternalConnection(externalDbConnection, connectionString);
 		}
 
-		dbContext.SetDbTransaction(null, out newDbContextTransaction!, TransactionUsage.CreateNew, transactionIsolationLevel);
+		dbContext.SetDbTransaction((IDbContextTransaction)null!, out newDbContextTransaction!, TransactionUsage.CreateNew, transactionIsolationLevel);
 
 		return dbContext;
 	}

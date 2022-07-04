@@ -14,7 +14,7 @@ public interface IDbContext : IDisposable, IAsyncDisposable
 {
 	DbConnection DbConnection { get; }
 	IDbContextTransaction? DbContextTransaction { get; }
-	IDbTransaction? DbTransaction { get; }
+	DbTransaction? DbTransaction { get; }
 	DbContextId ContextId { get; }
 	ChangeTracker ChangeTracker { get; }
 	DatabaseFacade Database { get; }
@@ -80,6 +80,12 @@ public interface IDbContext : IDisposable, IAsyncDisposable
 
 	void SetDbTransaction(
 		IDbContextTransaction? existingDbContextTransaction,
+		out IDbContextTransaction? newDbContextTransaction,
+		TransactionUsage transactionUsage,
+		IsolationLevel? transactionIsolationLevel);
+
+	void SetDbTransaction(
+		DbTransaction? existingTransaction,
 		out IDbContextTransaction? newDbContextTransaction,
 		TransactionUsage transactionUsage,
 		IsolationLevel? transactionIsolationLevel);

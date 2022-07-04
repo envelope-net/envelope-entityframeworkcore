@@ -5,28 +5,28 @@ namespace Envelope.Database.PostgreSql;
 
 internal class DbContextTransactionBehaviorObserver : ITransactionBehaviorObserver
 {
-	private readonly IDbContextTransaction _transaction;
+	private readonly IDbContextTransaction _dbContextTransaction;
 
-	public DbContextTransactionBehaviorObserver(IDbContextTransaction transaction)
+	public DbContextTransactionBehaviorObserver(IDbContextTransaction dbContextTransaction)
 	{
-		_transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
+		_dbContextTransaction = dbContextTransaction ?? throw new ArgumentNullException(nameof(dbContextTransaction));
 	}
 
 	public void Commit(ITransactionManager transactionManager)
-		=> _transaction.Commit();
+		=> _dbContextTransaction.Commit();
 
 	public Task CommitAsync(ITransactionManager transactionManager, CancellationToken cancellationToken)
-		=> _transaction.CommitAsync(cancellationToken);
+		=> _dbContextTransaction.CommitAsync(cancellationToken);
 
 	public void Rollback(ITransactionManager transactionManager, Exception? exception)
-		=> _transaction.Rollback();
+		=> _dbContextTransaction.Rollback();
 
 	public Task RollbackAsync(ITransactionManager transactionManager, Exception? exception, CancellationToken cancellationToken)
-		=> _transaction.RollbackAsync(cancellationToken);
+		=> _dbContextTransaction.RollbackAsync(cancellationToken);
 
 	public ValueTask DisposeAsync()
-		=> _transaction.DisposeAsync();
+		=> _dbContextTransaction.DisposeAsync();
 
 	public void Dispose()
-		=> _transaction.Dispose();
+		=> _dbContextTransaction.Dispose();
 }
