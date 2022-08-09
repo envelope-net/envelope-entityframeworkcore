@@ -8,7 +8,8 @@ namespace Envelope.EntityFrameworkCore.Queries;
 public class QueryOptions<TContext>
 	where TContext : IDbContext
 {
-	public QueryContextFactory<TContext> QueryContextFactory { get; }
+	private TContext? _context;
+	public ContextFactory<TContext> ContextFactory { get; }
 	public DbConnection? ExternalDbConnection { get; }
 	public string? ConnectionString { get; }
 	public IDbContextTransaction? DbContextTransaction { get; }
@@ -21,7 +22,7 @@ public class QueryOptions<TContext>
 			throw new ArgumentNullException(nameof(context));
 
 		return new QueryOptions<TContext>(
-			QueryContextFactory<TContext>.Create(context.QueryContextFactory),
+			ContextFactory<TContext>.Create(context.ContextFactory),
 			context.ExternalDbConnection,
 			context.ConnectionString,
 			context.DbContextTransaction,
@@ -29,13 +30,13 @@ public class QueryOptions<TContext>
 	}
 
 	private QueryOptions(
-		QueryContextFactory<TContext> queryContextFactory,
+		ContextFactory<TContext> contextFactory,
 		DbConnection? externalDbConnection,
 		string? connectionString,
 		IDbContextTransaction? dbContextTransaction,
 		ITransactionManager? transactionManager)
 	{
-		QueryContextFactory = queryContextFactory;
+		ContextFactory = contextFactory;
 		ExternalDbConnection = externalDbConnection;
 		ConnectionString = connectionString;
 		DbContextTransaction = dbContextTransaction;
@@ -47,13 +48,22 @@ public class QueryOptions<TContext>
 		if (serviceProvider == null)
 			throw new ArgumentNullException(nameof(serviceProvider));
 
-		QueryContextFactory = serviceProvider.GetRequiredService<QueryContextFactory<TContext>>();
+		ContextFactory = serviceProvider.GetRequiredService<ContextFactory<TContext>>();
 	}
 
-	public QueryOptions(QueryContextFactory<TContext> queryContextFactory)
+	public QueryOptions(ContextFactory<TContext> contextFactory)
 	{
-		QueryContextFactory = queryContextFactory ?? throw new ArgumentNullException(nameof(queryContextFactory));
+		ContextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
 	}
+
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+	
+	public QueryOptions(TContext context)
+	{
+		_context = context ?? throw new ArgumentNullException(nameof(context));
+	}
+
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
 	public QueryOptions(IServiceProvider serviceProvider, DbConnection? externalDbConnection, string? connectionString)
 		: this(serviceProvider)
@@ -77,8 +87,8 @@ public class QueryOptions<TContext>
 		TransactionManager = transactionManager ?? throw new ArgumentNullException(nameof(transactionManager));
 	}
 
-	public QueryOptions(QueryContextFactory<TContext> queryContextFactory, DbConnection? externalDbConnection, string? connectionString)
-		: this(queryContextFactory)
+	public QueryOptions(ContextFactory<TContext> contextFactory, DbConnection? externalDbConnection, string? connectionString)
+		: this(contextFactory)
 	{
 		if (externalDbConnection == null && string.IsNullOrWhiteSpace(connectionString))
 			throw new InvalidOperationException($"{nameof(externalDbConnection)} == null AND {nameof(connectionString)} == null");
@@ -87,35 +97,39 @@ public class QueryOptions<TContext>
 		ConnectionString = connectionString;
 	}
 
-	public QueryOptions(QueryContextFactory<TContext> queryContextFactory, IDbContextTransaction dbContextTransaction)
-		: this(queryContextFactory)
+	public QueryOptions(ContextFactory<TContext> contextFactory, IDbContextTransaction dbContextTransaction)
+		: this(contextFactory)
 	{
 		DbContextTransaction = dbContextTransaction ?? throw new ArgumentNullException(nameof(dbContextTransaction));
 	}
 
-	public QueryOptions(QueryContextFactory<TContext> queryContextFactory, ITransactionManager transactionManager)
-		: this(queryContextFactory)
+	public QueryOptions(ContextFactory<TContext> contextFactory, ITransactionManager transactionManager)
+		: this(contextFactory)
 	{
 		TransactionManager = transactionManager ?? throw new ArgumentNullException(nameof(transactionManager));
 	}
 
 	public Task<TContext> GetContextAsync(CancellationToken cancellationToken = default)
 	{
-		if (TransactionManager != null)
+		if (_context != null)
 		{
-			return QueryContextFactory.GetOrCreateDbContextWithNewTransactionAsync(TransactionManager, cancellationToken);
+			return Task.FromResult(_context);
+		}
+		else if (TransactionManager != null)
+		{
+			return ContextFactory.GetOrCreateDbContextWithNewTransactionAsync(TransactionManager, cancellationToken);
 		}
 		else if (DbContextTransaction != null)
 		{
-			return Task.FromResult(QueryContextFactory.GetOrCreateDbContextWithExistingTransaction(DbContextTransaction));
+			return Task.FromResult(ContextFactory.GetOrCreateDbContextWithExistingTransaction(DbContextTransaction));
 		}
 		else if (ExternalDbConnection != null || !string.IsNullOrWhiteSpace(ConnectionString))
 		{
-			return Task.FromResult(QueryContextFactory.GetOrCreateDbContextWithoutTransaction(ExternalDbConnection, ConnectionString));
+			return Task.FromResult(ContextFactory.GetOrCreateDbContextWithoutTransaction(ExternalDbConnection, ConnectionString));
 		}
 		else
 		{
-			return QueryContextFactory.GetOrCreateDbContextWithNewTransactionAsync(cancellationToken);
+			return ContextFactory.GetOrCreateDbContextWithNewTransactionAsync(cancellationToken);
 		}
 	}
 }

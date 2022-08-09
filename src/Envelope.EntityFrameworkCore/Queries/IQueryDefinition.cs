@@ -16,7 +16,7 @@ public interface IQueryDefinition<TContext, T>
 		CancellationToken cancellationToken = default);
 
 	Task<IQueryable<T>> GetQueryAsync(
-		QueryContextFactory<TContext> factory,
+		ContextFactory<TContext> factory,
 		ITraceInfo traceInfo,
 		CancellationToken cancellationToken = default);
 

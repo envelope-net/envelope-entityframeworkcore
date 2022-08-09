@@ -6,7 +6,7 @@ using System.Data.Common;
 
 namespace Envelope.EntityFrameworkCore.Queries;
 
-public class QueryContextFactory<TContext>
+public class ContextFactory<TContext>
 	where TContext : IDbContext
 {
 	private readonly AsyncLock _locker = new();
@@ -18,20 +18,20 @@ public class QueryContextFactory<TContext>
 	private readonly IDbContextProvider _dbContextProvider;
 	private readonly Lazy<ITransactionManager> _transactionManager;
 
-	public static QueryContextFactory<TContext> Create<TOtherContext>(QueryContextFactory<TOtherContext> factory)
+	public static ContextFactory<TContext> Create<TOtherContext>(ContextFactory<TOtherContext> factory)
 		where TOtherContext : IDbContext
 	{
 		if (factory == null)
 			throw new ArgumentNullException(nameof(factory));
 
-		return new QueryContextFactory<TContext>(
+		return new ContextFactory<TContext>(
 			factory._serviceProvider,
 			factory._transactionFactory,
 			factory._dbContextProvider,
 			factory._transactionManager);
 	}
 
-	private QueryContextFactory(
+	private ContextFactory(
 		IServiceProvider serviceProvider,
 		TransactionFactoryAsync transactionFactory,
 		IDbContextProvider dbContextProvider,
@@ -43,7 +43,7 @@ public class QueryContextFactory<TContext>
 		_transactionManager = transactionManager ?? throw new ArgumentNullException(nameof(transactionManager));
 	}
 
-	public QueryContextFactory(
+	public ContextFactory(
 		IServiceProvider serviceProvider,
 		TransactionFactoryAsync transactionFactory,
 		IDbContextProvider dbContextProvider)

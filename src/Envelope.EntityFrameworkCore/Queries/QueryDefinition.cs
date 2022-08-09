@@ -29,7 +29,7 @@ public abstract class QueryDefinition<TContext, T> : IQueryDefinition<TContext, 
 			cancellationToken);
 
 	public virtual Task<IQueryable<T>> GetQueryAsync(
-		QueryContextFactory<TContext> factory,
+		ContextFactory<TContext> factory,
 		ITraceInfo traceInfo,
 		CancellationToken cancellationToken = default)
 		=> GetQueryAsync(
