@@ -5,15 +5,17 @@ using System.Data.Common;
 
 namespace Envelope.EntityFrameworkCore.Queries;
 
-public class QueryOptions<TContext>
+public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 	where TContext : IDbContext
 {
-	private TContext? _context;
+	private readonly TContext? _context;
+	private bool _disposed;
+
 	public ContextFactory<TContext> ContextFactory { get; }
 	public DbConnection? ExternalDbConnection { get; }
 	public string? ConnectionString { get; }
 	public IDbContextTransaction? DbContextTransaction { get; }
-	public ITransactionManager? TransactionManager { get; }
+	public ITransactionCoordinator? TransactionCoordinator { get; }
 
 	public static QueryOptions<TContext> Create<TOtherContext>(QueryOptions<TOtherContext> context)
 		where TOtherContext : IDbContext
@@ -26,7 +28,7 @@ public class QueryOptions<TContext>
 			context.ExternalDbConnection,
 			context.ConnectionString,
 			context.DbContextTransaction,
-			context.TransactionManager);
+			context.TransactionCoordinator);
 	}
 
 	private QueryOptions(
@@ -34,13 +36,13 @@ public class QueryOptions<TContext>
 		DbConnection? externalDbConnection,
 		string? connectionString,
 		IDbContextTransaction? dbContextTransaction,
-		ITransactionManager? transactionManager)
+		ITransactionCoordinator? transactionCoordinator)
 	{
 		ContextFactory = contextFactory;
 		ExternalDbConnection = externalDbConnection;
 		ConnectionString = connectionString;
 		DbContextTransaction = dbContextTransaction;
-		TransactionManager = transactionManager;
+		TransactionCoordinator = transactionCoordinator;
 	}
 
 	public QueryOptions(IServiceProvider serviceProvider)
@@ -58,7 +60,7 @@ public class QueryOptions<TContext>
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 	
-	public QueryOptions(TContext context)
+	internal QueryOptions(TContext context)
 	{
 		_context = context ?? throw new ArgumentNullException(nameof(context));
 	}
@@ -81,10 +83,10 @@ public class QueryOptions<TContext>
 		DbContextTransaction = dbContextTransaction ?? throw new ArgumentNullException(nameof(dbContextTransaction));
 	}
 
-	public QueryOptions(IServiceProvider serviceProvider, ITransactionManager transactionManager)
+	public QueryOptions(IServiceProvider serviceProvider, ITransactionCoordinator transactionCoordinator)
 		: this(serviceProvider)
 	{
-		TransactionManager = transactionManager ?? throw new ArgumentNullException(nameof(transactionManager));
+		TransactionCoordinator = transactionCoordinator ?? throw new ArgumentNullException(nameof(transactionCoordinator));
 	}
 
 	public QueryOptions(ContextFactory<TContext> contextFactory, DbConnection? externalDbConnection, string? connectionString)
@@ -103,10 +105,10 @@ public class QueryOptions<TContext>
 		DbContextTransaction = dbContextTransaction ?? throw new ArgumentNullException(nameof(dbContextTransaction));
 	}
 
-	public QueryOptions(ContextFactory<TContext> contextFactory, ITransactionManager transactionManager)
+	public QueryOptions(ContextFactory<TContext> contextFactory, ITransactionCoordinator transactionCoordinator)
 		: this(contextFactory)
 	{
-		TransactionManager = transactionManager ?? throw new ArgumentNullException(nameof(transactionManager));
+		TransactionCoordinator = transactionCoordinator ?? throw new ArgumentNullException(nameof(transactionCoordinator));
 	}
 
 	public Task<TContext> GetContextAsync(CancellationToken cancellationToken = default)
@@ -115,9 +117,9 @@ public class QueryOptions<TContext>
 		{
 			return Task.FromResult(_context);
 		}
-		else if (TransactionManager != null)
+		else if (TransactionCoordinator != null)
 		{
-			return ContextFactory.GetOrCreateDbContextWithNewTransactionAsync(TransactionManager, cancellationToken);
+			return ContextFactory.GetOrCreateDbContextWithNewTransactionAsync(TransactionCoordinator, cancellationToken);
 		}
 		else if (DbContextTransaction != null)
 		{
@@ -131,5 +133,78 @@ public class QueryOptions<TContext>
 		{
 			return ContextFactory.GetOrCreateDbContextWithNewTransactionAsync(cancellationToken);
 		}
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		if (_disposed)
+			return;
+
+		_disposed = true;
+
+		await DisposeAsyncCoreAsync().ConfigureAwait(false);
+
+		Dispose(disposing: false);
+		GC.SuppressFinalize(this);
+	}
+
+	protected virtual async ValueTask DisposeAsyncCoreAsync()
+	{
+		if (ContextFactory != null)
+			await ContextFactory.DisposeAsync();
+
+		if (TransactionCoordinator != null)
+			await TransactionCoordinator.DisposeAsync();
+
+		try
+		{
+			if (DbContextTransaction != null)
+				await DbContextTransaction.DisposeAsync();
+		}
+		catch { }
+
+		try
+		{
+			if (ExternalDbConnection != null)
+				await ExternalDbConnection.DisposeAsync();
+		}
+		catch { }
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+		if (_disposed)
+			return;
+
+		_disposed = true;
+
+		if (disposing)
+		{
+			if (ContextFactory != null)
+				ContextFactory.Dispose();
+
+			if (TransactionCoordinator != null)
+				TransactionCoordinator.Dispose();
+
+			try
+			{
+				if (DbContextTransaction != null)
+					DbContextTransaction.Dispose();
+			}
+			catch { }
+
+			try
+			{
+				if (ExternalDbConnection != null)
+					ExternalDbConnection.Dispose();
+			}
+			catch { }
+		}
+	}
+
+	public void Dispose()
+	{
+		Dispose(disposing: true);
+		GC.SuppressFinalize(this);
 	}
 }

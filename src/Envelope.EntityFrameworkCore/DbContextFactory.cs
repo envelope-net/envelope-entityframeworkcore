@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Envelope.Database;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using System.Data;
@@ -60,6 +61,64 @@ public static partial class DbContextFactory
 		}
 
 		return SetDbTransaction(dbContext, existingDbTransaction, out newDbContextTransaction, TransactionUsage.Reuse, null);
+	}
+
+	public static TContext CreateNewDbContext<TContext>(
+		IServiceProvider serviceProvider,
+		IDbTransactionFactory dbTransactionFactory,
+		out IDbContextTransaction? newDbContextTransaction,
+		string? commandQueryName = null,
+		Guid? idCommandQuery = null)
+		where TContext : DbContext
+	{
+		if (serviceProvider == null)
+			throw new ArgumentNullException(nameof(serviceProvider));
+
+		if (dbTransactionFactory == null)
+			throw new ArgumentNullException(nameof(dbTransactionFactory));
+
+		dbTransactionFactory.Initialize();
+
+		var dbContext = serviceProvider.GetRequiredService<TContext>();
+		if (dbContext is DbContextBase dbContextBase)
+		{
+			dbContextBase.CommandQueryName = commandQueryName;
+			dbContextBase.IdCommandQuery = idCommandQuery;
+			dbContextBase.SetExternalConnection(dbTransactionFactory.DbConnection, null);
+		}
+
+		var dbTransaction = dbTransactionFactory.GetOrBeginTransaction();
+		return SetDbTransaction(dbContext, dbTransaction, out newDbContextTransaction, TransactionUsage.Reuse, null);
+	}
+
+	public static async Task<(TContext dbContext, IDbContextTransaction? newDbContextTransaction)> CreateNewDbContextAsync<TContext>(
+		IServiceProvider serviceProvider,
+		IDbTransactionFactory dbTransactionFactory,
+		string? commandQueryName = null,
+		Guid? idCommandQuery = null,
+		CancellationToken cancellationToken = default)
+		where TContext : DbContext
+	{
+		if (serviceProvider == null)
+			throw new ArgumentNullException(nameof(serviceProvider));
+
+		if (dbTransactionFactory == null)
+			throw new ArgumentNullException(nameof(dbTransactionFactory));
+
+		await dbTransactionFactory.InitializeAsync();
+
+		var context = serviceProvider.GetRequiredService<TContext>();
+		if (context is DbContextBase dbContextBase)
+		{
+			dbContextBase.CommandQueryName = commandQueryName;
+			dbContextBase.IdCommandQuery = idCommandQuery;
+			dbContextBase.SetExternalConnection(dbTransactionFactory.DbConnection, null);
+		}
+
+		var dbTransaction = await dbTransactionFactory.GetOrBeginTransactionAsync(cancellationToken);
+		SetDbTransaction(context, dbTransaction, out IDbContextTransaction? newDbContextTransaction, TransactionUsage.Reuse, null);
+
+		return new(context, newDbContextTransaction);
 	}
 
 	public static TContext CreateNewDbContext<TContext>(
@@ -312,6 +371,66 @@ public static partial class DbContextFactory
 		dbContext.SetDbTransaction(existingTransaction, out newDbContextTransaction, TransactionUsage.Reuse, null);
 
 		return dbContext;
+	}
+
+	public static TContext CreateNewIDbContext<TContext>(
+		IServiceProvider serviceProvider,
+		IDbTransactionFactory dbTransactionFactory,
+		out IDbContextTransaction? newDbContextTransaction,
+		string? commandQueryName = null,
+		Guid? idCommandQuery = null)
+		where TContext : IDbContext
+	{
+		if (serviceProvider == null)
+			throw new ArgumentNullException(nameof(serviceProvider));
+
+		if (dbTransactionFactory == null)
+			throw new ArgumentNullException(nameof(dbTransactionFactory));
+
+		dbTransactionFactory.Initialize();
+
+		var dbContext = serviceProvider.GetRequiredService<TContext>();
+		if (dbContext is DbContextBase dbContextBase)
+		{
+			dbContextBase.CommandQueryName = commandQueryName;
+			dbContextBase.IdCommandQuery = idCommandQuery;
+			dbContextBase.SetExternalConnection(dbTransactionFactory.DbConnection, null);
+		}
+
+		var dbTransaction = dbTransactionFactory.GetOrBeginTransaction();
+		dbContext.SetDbTransaction(dbTransaction, out newDbContextTransaction, TransactionUsage.Reuse, null);
+
+		return dbContext;
+	}
+
+	public static async Task<(TContext dbContext, IDbContextTransaction? newDbContextTransaction)> CreateNewIDbContextAsync<TContext>(
+		IServiceProvider serviceProvider,
+		IDbTransactionFactory dbTransactionFactory,
+		string? commandQueryName = null,
+		Guid? idCommandQuery = null,
+		CancellationToken cancellationToken = default)
+		where TContext : IDbContext
+	{
+		if (serviceProvider == null)
+			throw new ArgumentNullException(nameof(serviceProvider));
+
+		if (dbTransactionFactory == null)
+			throw new ArgumentNullException(nameof(dbTransactionFactory));
+
+		await dbTransactionFactory.InitializeAsync();
+
+		var context = serviceProvider.GetRequiredService<TContext>();
+		if (context is DbContextBase dbContextBase)
+		{
+			dbContextBase.CommandQueryName = commandQueryName;
+			dbContextBase.IdCommandQuery = idCommandQuery;
+			dbContextBase.SetExternalConnection(dbTransactionFactory.DbConnection, null);
+		}
+
+		var dbTransaction = await dbTransactionFactory.GetOrBeginTransactionAsync(cancellationToken);
+		context.SetDbTransaction(dbTransaction, out IDbContextTransaction? newDbContextTransaction, TransactionUsage.Reuse, null);
+
+		return new(context, newDbContextTransaction);
 	}
 
 	public static TContext CreateNewIDbContext<TContext>(

@@ -6,26 +6,17 @@ namespace Envelope.EntityFrameworkCore.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-	public static IServiceCollection AddDbContextCache(this IServiceCollection services, ServiceLifetime dbContextCacheLifetime = ServiceLifetime.Scoped)
+	private static readonly string _dbContextCacheType = typeof(IDbContextCache).FullName!;
+
+	public static IServiceCollection AddDbContextCacheFactory(this IServiceCollection services)
 	{
 		if (services == null)
 			throw new ArgumentNullException(nameof(services));
 
-		services.TryAddTransient<ITransactionManagerFactory, DbTransactionManagerFactory>();
-		services.TryAdd(new ServiceDescriptor(typeof(IDbContextProvider), typeof(DbContextProvider), dbContextCacheLifetime));
-		services.TryAdd(new ServiceDescriptor(typeof(IDbContextCache), typeof(DbContextCache), dbContextCacheLifetime));
-		return services;
-	}
-
-	public static IServiceCollection AddDbContextCache<TIdentity>(this IServiceCollection services, ServiceLifetime dbContextCacheLifetime = ServiceLifetime.Scoped)
-		where TIdentity : struct
-	{
-		if (services == null)
-			throw new ArgumentNullException(nameof(services));
-
-		services.TryAddTransient<ITransactionManagerFactory, TransactionDbContextFactory<TIdentity>>();
-		services.TryAdd(new ServiceDescriptor(typeof(IDbContextProvider), typeof(DbContextProvider<TIdentity>), dbContextCacheLifetime));
-		services.TryAdd(new ServiceDescriptor(typeof(IDbContextCache), typeof(DbContextCache<TIdentity>), dbContextCacheLifetime));
+		services.TryAddTransient<ITransactionCoordinator, TransactionCoordinator>();
+		services.AddTransient<ITransactionCacheFactoryStore>(sp => new TransactionCacheFactoryStore(
+			_dbContextCacheType,
+			serviceProvider => new DbContextCache(serviceProvider)));
 		return services;
 	}
 }

@@ -23,10 +23,13 @@ public abstract class QueryDefinition<TContext, T> : IQueryDefinition<TContext, 
 		IServiceProvider serviceProvider,
 		ITraceInfo traceInfo,
 		CancellationToken cancellationToken = default)
-		=> GetQueryAsync(
-			new QueryOptions<TContext>(serviceProvider),
+	{
+		using var queryOptions = new QueryOptions<TContext>(serviceProvider);
+		return GetQueryAsync(
+			queryOptions,
 			traceInfo,
 			cancellationToken);
+	}
 
 	public virtual Task<IQueryable<T>> GetQueryAsync(
 		ContextFactory<TContext> factory,
