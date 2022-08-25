@@ -27,7 +27,7 @@ public class DbContextCache : IDbContextCache, ITransactionCache, IDisposable, I
 		TransactionCoordinator = null!;
 	}
 
-	public void SetTransactionCoordinator(ITransactionCoordinator transactionCoordinator)
+	public void SetTransactionCoordinatorInternal(ITransactionCoordinator transactionCoordinator)
 	{
 		TransactionCoordinator = transactionCoordinator ?? throw new ArgumentNullException(nameof(transactionCoordinator));
 	}

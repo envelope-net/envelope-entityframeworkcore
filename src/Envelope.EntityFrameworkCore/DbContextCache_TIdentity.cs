@@ -30,7 +30,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 		TransactionCoordinator = null!;
 	}
 
-	public void SetTransactionCoordinator(ITransactionCoordinator transactionCoordinator)
+	public void SetTransactionCoordinatorInternal(ITransactionCoordinator transactionCoordinator)
 	{
 		TransactionCoordinator = transactionCoordinator ?? throw new ArgumentNullException(nameof(transactionCoordinator));
 	}
