@@ -74,7 +74,7 @@ public abstract class DbContextBase : Microsoft.EntityFrameworkCore.DbContext, I
 	}
 
 	private bool initialized = false;
-	private bool disposedValue;
+	private bool _disposed;
 	private readonly object _initLock = new();
 	internal void SetExternalConnection(DbConnection? externalDbConnection, string? externalConnectionString/*, Func<bool>? isTransactionCommittedDelegate*/)
 	{
@@ -385,34 +385,17 @@ public abstract class DbContextBase : Microsoft.EntityFrameworkCore.DbContext, I
 			transactionUsage,
 			transactionIsolationLevel);
 
-	public override void Dispose()
-	{
-		Dispose(disposing: true);
-		GC.SuppressFinalize(this);
-	}
-
 	public override async ValueTask DisposeAsync()
 	{
+		if (_disposed)
+			return;
+
+		_disposed = true;
+
 		await DisposeAsyncCoreAsync().ConfigureAwait(false);
 
 		Dispose(disposing: false);
 		GC.SuppressFinalize(this);
-	}
-
-	protected virtual void Dispose(bool disposing)
-	{
-		if (!disposedValue)
-		{
-			if (disposing)
-			{
-				QueryCacheManager.Dispose();
-				base.Dispose();
-
-				QueryCacheManager = null!;
-			}
-
-			disposedValue = true;
-		}
 	}
 
 	protected virtual async ValueTask DisposeAsyncCoreAsync()
@@ -421,5 +404,27 @@ public abstract class DbContextBase : Microsoft.EntityFrameworkCore.DbContext, I
 		await base.DisposeAsync().ConfigureAwait(false);
 
 		QueryCacheManager = null!;
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+		if (_disposed)
+			return;
+
+		_disposed = true;
+
+		if (disposing)
+		{
+			QueryCacheManager.Dispose();
+			base.Dispose();
+
+			QueryCacheManager = null!;
+		}
+	}
+
+	public override void Dispose()
+	{
+		Dispose(disposing: true);
+		GC.SuppressFinalize(this);
 	}
 }
