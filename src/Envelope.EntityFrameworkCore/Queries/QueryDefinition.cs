@@ -5,7 +5,7 @@ namespace Envelope.EntityFrameworkCore.Queries;
 public abstract class QueryDefinition<TContext, T> : IQueryDefinition<TContext, T>
 	where TContext : IDbContext
 {
-	public virtual Task<TContext> GetContextAsync(
+	protected virtual Task<TContext> GetContextAsync(
 		QueryOptions<TContext> queryOptions,
 		ITraceInfo traceInfo,
 		CancellationToken cancellationToken = default)
@@ -19,7 +19,7 @@ public abstract class QueryDefinition<TContext, T> : IQueryDefinition<TContext, 
 		return queryOptions.GetContextAsync(cancellationToken);
 	}
 
-	public virtual Task<IQueryable<T>> GetQueryAsync(
+	protected virtual Task<IQueryable<T>> GetQueryAsync(
 		IServiceProvider serviceProvider,
 		ITraceInfo traceInfo,
 		CancellationToken cancellationToken = default)
@@ -31,7 +31,7 @@ public abstract class QueryDefinition<TContext, T> : IQueryDefinition<TContext, 
 			cancellationToken);
 	}
 
-	public virtual Task<IQueryable<T>> GetQueryAsync(
+	protected virtual Task<IQueryable<T>> GetQueryAsync(
 		ContextFactory<TContext> factory,
 		ITraceInfo traceInfo,
 		CancellationToken cancellationToken = default)
@@ -40,7 +40,7 @@ public abstract class QueryDefinition<TContext, T> : IQueryDefinition<TContext, 
 			traceInfo,
 			cancellationToken);
 
-	public abstract Task<IQueryable<T>> GetQueryAsync(
+	protected abstract Task<IQueryable<T>> GetQueryAsync(
 		QueryOptions<TContext> queryOptions,
 		ITraceInfo traceInfo,
 		CancellationToken cancellationToken = default);
