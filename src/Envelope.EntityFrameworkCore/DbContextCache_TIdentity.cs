@@ -1,19 +1,18 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
+﻿using Envelope.Database;
+using Envelope.Database.PostgreSql;
 using Envelope.Transactions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Data.Common;
-using Envelope.Database.PostgreSql;
-using Envelope.Database;
 
 namespace Envelope.EntityFrameworkCore;
 
 public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDisposable, IAsyncDisposable
-
-
 	where TIdentity : struct
 {
+	private readonly IDbContextTransactionBehaviorObserverFactory _dbContextTransactionBehaviorObserverFactory;
 	private readonly ConcurrentDictionary<string, DbContext> _dbContextCache;
 	private readonly ConcurrentDictionary<string, IDbContext> _idbContextCache;
 	private readonly IServiceProvider _serviceProvider;
@@ -22,11 +21,12 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 	public ITransactionCoordinator TransactionCoordinator { get; private set; }
 
-	public DbContextCache(IServiceProvider serviceProvider)
+	public DbContextCache(IServiceProvider serviceProvider, IDbContextTransactionBehaviorObserverFactory dbContextTransactionBehaviorObserverFactory)
 	{
 		_dbContextCache = new ConcurrentDictionary<string, DbContext>();
 		_idbContextCache = new ConcurrentDictionary<string, IDbContext>();
 		_serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+		_dbContextTransactionBehaviorObserverFactory = dbContextTransactionBehaviorObserverFactory ?? throw new ArgumentNullException(nameof(dbContextTransactionBehaviorObserverFactory));
 		TransactionCoordinator = null!;
 	}
 
@@ -73,7 +73,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 		if (transactionCoordinator != null && newDbContextTransaction != null)
 		{
 			var transaction = newDbContextTransaction;
-			var observer = new DbContextTransactionBehaviorObserver(transaction);
+			var observer = _dbContextTransactionBehaviorObserverFactory.Create(transaction);
 			transactionCoordinator.ConnectTransactionObserver(observer);
 		}
 
@@ -97,7 +97,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 		if (transactionCoordinator != null && newDbContextTransaction != null)
 		{
-			var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+			var observer = _dbContextTransactionBehaviorObserverFactory.Create(newDbContextTransaction);
 			transactionCoordinator.ConnectTransactionObserver(observer);
 		}
 
@@ -121,7 +121,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 		if (transactionCoordinator != null && newDbContextTransaction != null)
 		{
-			var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+			var observer = _dbContextTransactionBehaviorObserverFactory.Create(newDbContextTransaction);
 			transactionCoordinator.ConnectTransactionObserver(observer);
 		}
 
@@ -272,7 +272,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 			if (transactionCoordinator != null && newDbContextTransaction != null)
 			{
-				var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+				var observer = _dbContextTransactionBehaviorObserverFactory.Create(newDbContextTransaction);
 				transactionCoordinator.ConnectTransactionObserver(observer);
 			}
 
@@ -309,7 +309,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 			if (transactionCoordinator != null && newDbContextTransaction != null)
 			{
-				var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+				var observer = _dbContextTransactionBehaviorObserverFactory.Create(newDbContextTransaction);
 				transactionCoordinator.ConnectTransactionObserver(observer);
 			}
 
@@ -346,7 +346,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 			if (transactionCoordinator != null && newDbContextTransaction != null)
 			{
-				var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+				var observer = _dbContextTransactionBehaviorObserverFactory.Create(newDbContextTransaction);
 				transactionCoordinator.ConnectTransactionObserver(observer);
 			}
 
@@ -384,7 +384,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 				if (transactionCoordinator != null && newDbContextTransaction != null)
 				{
-					var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+					var observer = _dbContextTransactionBehaviorObserverFactory.Create(newDbContextTransaction);
 					transactionCoordinator.ConnectTransactionObserver(observer);
 
 					var tfObserver = new DbTransactionFactoryBehaviorObserver(dbTransactionFactory);
@@ -430,7 +430,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 			{
 				if (transactionCoordinator != null && newDbContextTransaction != null)
 				{
-					var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+					var observer = _dbContextTransactionBehaviorObserverFactory.Create(newDbContextTransaction);
 					transactionCoordinator.ConnectTransactionObserver(observer);
 
 					var tfObserver = new DbTransactionFactoryBehaviorObserver(dbTransactionFactory);
@@ -493,7 +493,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 		if (transactionCoordinator != null && newDbContextTransaction != null)
 		{
 			var transaction = newDbContextTransaction;
-			var observer = new DbContextTransactionBehaviorObserver(transaction);
+			var observer = _dbContextTransactionBehaviorObserverFactory.Create(transaction);
 			transactionCoordinator.ConnectTransactionObserver(observer);
 		}
 
@@ -517,7 +517,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 		if (transactionCoordinator != null && newDbContextTransaction != null)
 		{
-			var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction!);
+			var observer = _dbContextTransactionBehaviorObserverFactory.Create(newDbContextTransaction!);
 			transactionCoordinator.ConnectTransactionObserver(observer);
 		}
 
@@ -541,7 +541,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 		if (transactionCoordinator != null && newDbContextTransaction != null)
 		{
-			var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction!);
+			var observer = _dbContextTransactionBehaviorObserverFactory.Create(newDbContextTransaction!);
 			transactionCoordinator.ConnectTransactionObserver(observer);
 		}
 
@@ -692,7 +692,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 			if (transactionCoordinator != null && newDbContextTransaction != null)
 			{
-				var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+				var observer = _dbContextTransactionBehaviorObserverFactory.Create(newDbContextTransaction);
 				transactionCoordinator.ConnectTransactionObserver(observer);
 			}
 
@@ -730,7 +730,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 				if (transactionCoordinator != null && newDbContextTransaction != null)
 				{
-					var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+					var observer = _dbContextTransactionBehaviorObserverFactory.Create(newDbContextTransaction);
 					transactionCoordinator.ConnectTransactionObserver(observer);
 				}
 
@@ -768,7 +768,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 				if (transactionCoordinator != null && newDbContextTransaction != null)
 				{
-					var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+					var observer = _dbContextTransactionBehaviorObserverFactory.Create(newDbContextTransaction);
 					transactionCoordinator.ConnectTransactionObserver(observer);
 				}
 
@@ -806,7 +806,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 				if (transactionCoordinator != null && newDbContextTransaction != null)
 				{
-					var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+					var observer = _dbContextTransactionBehaviorObserverFactory.Create(newDbContextTransaction);
 					transactionCoordinator.ConnectTransactionObserver(observer);
 
 					var tfObserver = new DbTransactionFactoryBehaviorObserver(dbTransactionFactory);
@@ -852,7 +852,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 			{
 				if (transactionCoordinator != null && newDbContextTransaction != null)
 				{
-					var observer = new DbContextTransactionBehaviorObserver(newDbContextTransaction);
+					var observer = _dbContextTransactionBehaviorObserverFactory.Create(newDbContextTransaction);
 					transactionCoordinator.ConnectTransactionObserver(observer);
 
 					var tfObserver = new DbTransactionFactoryBehaviorObserver(dbTransactionFactory);
