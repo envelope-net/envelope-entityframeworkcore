@@ -8,7 +8,7 @@ internal class AuditEntryInternal
 {
 	public EntityEntry Entry { get; }
 
-	public DateTime Created { get; set; }
+	public DateTime CreatedUtc { get; set; }
 	public Guid? IdUser { get; set; }
 	public string TableName { get; }
 	public Dictionary<string, object?> KeyValues { get; } = new Dictionary<string, object?>();
@@ -34,7 +34,7 @@ internal class AuditEntryInternal
 		{
 			IdUser = IdUser,
 			IdAuditType = (int)DbOperation,
-			CreatedUtc = Created,
+			CreatedUtc = CreatedUtc,
 			TableName = TableName,
 			PrimaryKey = System.Text.Json.JsonSerializer.Serialize(KeyValues),
 			OldValues = OldValues.Count == 0 ? null : System.Text.Json.JsonSerializer.Serialize(OldValues),

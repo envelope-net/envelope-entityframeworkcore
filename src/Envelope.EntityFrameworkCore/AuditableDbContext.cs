@@ -141,7 +141,7 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 
 		var auditEntries = new List<AuditEntryInternal>();
 
-		var now = DateTime.Now;
+		var nowUtc = DateTime.UtcNow;
 		foreach (var entry in ChangeTracker.Entries())
 		{
 			if (entry.Entity is IAuditEntry || entry.State == EntityState.Detached || entry.State == EntityState.Unchanged)
@@ -218,14 +218,14 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 				switch (entry.State)
 				{
 					case EntityState.Added:
-						auditable.AuditCreatedUtc = now;
+						auditable.AuditCreatedUtc = nowUtc;
 						auditable.IdAuditCreatedBy = _applicationContext.TraceInfo.IdUser;
 						break;
 
 					case EntityState.Modified:
 						if (entry.Properties.Any(x => x.IsModified))
 						{
-							auditable.AuditModifiedUtc = now;
+							auditable.AuditModifiedUtc = nowUtc;
 							auditable.IdAuditModifiedBy = _applicationContext.TraceInfo.IdUser;
 						}
 						break;
@@ -238,7 +238,7 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 			var auditEntry = new AuditEntryInternal(entry)
 			{
 				IdUser = _applicationContext.TraceInfo.IdUser,
-				Created = now,
+				CreatedUtc = nowUtc,
 				CorrelationId = _applicationContext.TraceInfo.CorrelationId,
 				CommandQueryName = this.CommandQueryName,
 				IdCommandQuery = this.IdCommandQuery
