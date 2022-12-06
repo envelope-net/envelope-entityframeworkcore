@@ -1,13 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Envelope.Converters;
+﻿using Envelope.EntityFrameworkCore.Internal;
 using Envelope.Model;
-using Envelope.EntityFrameworkCore.Internal;
 using Envelope.Model.Audit;
 using Envelope.Model.Concurrence;
 using Envelope.Model.Correlation;
 using Envelope.Model.Synchronyzation;
 using Envelope.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Runtime.CompilerServices;
 
 namespace Envelope.EntityFrameworkCore;
@@ -265,7 +264,7 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 				switch (entry.State)
 				{
 					case EntityState.Added:
-						auditEntry.DbOperation = DbOperation.Create;
+						auditEntry.DbOperation = DbOperation.Insert;
 						auditEntry.NewValues[propertyName] = property.CurrentValue;
 						break;
 

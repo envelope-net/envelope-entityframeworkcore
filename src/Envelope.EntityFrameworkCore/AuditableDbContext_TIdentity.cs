@@ -265,7 +265,7 @@ public abstract class AuditableDbContext<TAuditEntry, TIdentity> : DbContextBase
 				switch (entry.State)
 				{
 					case EntityState.Added:
-						auditEntry.DbOperation = DbOperation.Create;
+						auditEntry.DbOperation = DbOperation.Insert;
 						auditEntry.NewValues[propertyName] = property.CurrentValue;
 						break;
 
