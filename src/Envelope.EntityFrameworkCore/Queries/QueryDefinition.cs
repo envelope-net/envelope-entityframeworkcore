@@ -5,43 +5,27 @@ namespace Envelope.EntityFrameworkCore.Queries;
 public abstract class QueryDefinition<TContext, T> : IQueryDefinition<TContext, T>
 	where TContext : IDbContext
 {
-	protected virtual Task<TContext> GetContextAsync(
-		QueryOptions<TContext> queryOptions,
-		ITraceInfo traceInfo,
-		CancellationToken cancellationToken = default)
+	public QueryOptions<TContext> QueryOptions { get; }
+
+	public QueryDefinition(IServiceProvider serviceProvider)
 	{
-		if (queryOptions == null)
-			throw new ArgumentNullException(nameof(queryOptions));
-
-		if (traceInfo == null)
-			throw new ArgumentNullException(nameof(traceInfo));
-
-		return queryOptions.GetContextAsync(cancellationToken);
+		QueryOptions = new QueryOptions<TContext>(serviceProvider);
 	}
 
-	protected virtual Task<IQueryable<T>> GetQueryAsync(
-		IServiceProvider serviceProvider,
-		ITraceInfo traceInfo,
-		CancellationToken cancellationToken = default)
+	public QueryDefinition(ContextFactory<TContext> factory)
 	{
-		using var queryOptions = new QueryOptions<TContext>(serviceProvider);
-		return GetQueryAsync(
-			queryOptions,
-			traceInfo,
-			cancellationToken);
+		QueryOptions = new QueryOptions<TContext>(factory);
 	}
 
-	protected virtual Task<IQueryable<T>> GetQueryAsync(
-		ContextFactory<TContext> factory,
-		ITraceInfo traceInfo,
-		CancellationToken cancellationToken = default)
-		=> GetQueryAsync(
-			new QueryOptions<TContext>(factory),
-			traceInfo,
-			cancellationToken);
+	public QueryDefinition(QueryOptions<TContext> queryOptions)
+	{
+		QueryOptions = queryOptions ?? throw new ArgumentNullException(nameof(queryOptions));
+	}
 
-	protected abstract Task<IQueryable<T>> GetQueryAsync(
-		QueryOptions<TContext> queryOptions,
+	protected virtual Task<TContext> GetContextAsync(CancellationToken cancellationToken = default)
+		=> QueryOptions.GetContextAsync(cancellationToken);
+
+	public abstract Task<IQueryable<T>> GetQueryAsync(
 		ITraceInfo traceInfo,
 		CancellationToken cancellationToken = default);
 }

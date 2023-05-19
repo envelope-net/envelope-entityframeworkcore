@@ -8,9 +8,9 @@ namespace Envelope.EntityFrameworkCore.Queries;
 public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 	where TContext : IDbContext
 {
-	private readonly TContext? _context;
 	private bool _disposed;
 
+	public TContext? Context { get; }
 	public ContextFactory<TContext> ContextFactory { get; }
 	public DbConnection? ExternalDbConnection { get; }
 	public string? ConnectionString { get; }
@@ -45,6 +45,9 @@ public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 		TransactionCoordinator = transactionCoordinator;
 	}
 
+	public ITransactionCoordinator? GetTransactionCoordinator()
+		=> TransactionCoordinator ?? ContextFactory?.GetTransactionCoordinator();
+
 	public QueryOptions(IServiceProvider serviceProvider)
 	{
 		if (serviceProvider == null)
@@ -62,7 +65,7 @@ public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 	
 	internal QueryOptions(TContext context)
 	{
-		_context = context ?? throw new ArgumentNullException(nameof(context));
+		Context = context ?? throw new ArgumentNullException(nameof(context));
 	}
 
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
@@ -113,9 +116,9 @@ public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 
 	public Task<TContext> GetContextAsync(CancellationToken cancellationToken = default)
 	{
-		if (_context != null)
+		if (Context != null)
 		{
-			return Task.FromResult(_context);
+			return Task.FromResult(Context);
 		}
 		else if (TransactionCoordinator != null)
 		{

@@ -1,18 +1,18 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Envelope.Database;
+using Envelope.EntityFrameworkCore.Database;
+using Envelope.EntityFrameworkCore.QueryCache;
+using Envelope.Logging.SerilogEx;
+using Envelope.Model.Concurrence;
+using Envelope.Model.Correlation;
+using Envelope.Model.Synchronyzation;
+using Envelope.Trace;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
-using Envelope.Model.Concurrence;
-using Envelope.Model.Correlation;
-using Envelope.EntityFrameworkCore.QueryCache;
-using Envelope.Model.Synchronyzation;
-using Envelope.Logging.SerilogEx;
-using Envelope.Trace;
 using System.Data;
 using System.Data.Common;
 using System.Runtime.CompilerServices;
-using Envelope.Services;
-using Envelope.EntityFrameworkCore.Database;
 
 namespace Envelope.EntityFrameworkCore;
 
@@ -125,23 +125,33 @@ public abstract class DbContextBase<TIdentity> : Microsoft.EntityFrameworkCore.D
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0)
-		=> Save(true, null, memberName, sourceFilePath, sourceLineNumber);
+		=> Save(null, true, null, memberName, sourceFilePath, sourceLineNumber);
 
 	public virtual int Save(
+		ITraceInfo traceInfo,
+		[CallerMemberName] string memberName = "",
+		[CallerFilePath] string sourceFilePath = "",
+		[CallerLineNumber] int sourceLineNumber = 0)
+		=> Save(traceInfo, true, null, memberName, sourceFilePath, sourceLineNumber);
+
+	public virtual int Save(
+		ITraceInfo? traceInfo,
 		SaveOptions? options,
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0)
-		=> Save(true, options, memberName, sourceFilePath, sourceLineNumber);
+		=> Save(traceInfo, true, options, memberName, sourceFilePath, sourceLineNumber);
 
 	public virtual int Save(
+		ITraceInfo? traceInfo,
 		bool acceptAllChangesOnSuccess,
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0)
-		=> Save(acceptAllChangesOnSuccess, null, memberName, sourceFilePath, sourceLineNumber);
+		=> Save(traceInfo, acceptAllChangesOnSuccess, null, memberName, sourceFilePath, sourceLineNumber);
 
 	public virtual int Save(
+		ITraceInfo? traceInfo,
 		bool acceptAllChangesOnSuccess,
 		SaveOptions? options,
 		[CallerMemberName] string memberName = "",
@@ -167,25 +177,36 @@ public abstract class DbContextBase<TIdentity> : Microsoft.EntityFrameworkCore.D
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0)
-		=> SaveAsync(true, null, cancellationToken, memberName, sourceFilePath, sourceLineNumber);
+		=> SaveAsync(null, true, null, cancellationToken, memberName, sourceFilePath, sourceLineNumber);
 
 	public virtual Task<int> SaveAsync(
+		ITraceInfo traceInfo,
+		CancellationToken cancellationToken = default,
+		[CallerMemberName] string memberName = "",
+		[CallerFilePath] string sourceFilePath = "",
+		[CallerLineNumber] int sourceLineNumber = 0)
+		=> SaveAsync(traceInfo, true, null, cancellationToken, memberName, sourceFilePath, sourceLineNumber);
+
+	public virtual Task<int> SaveAsync(
+		ITraceInfo? traceInfo,
 		SaveOptions? options,
 		CancellationToken cancellationToken = default,
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0)
-		=> SaveAsync(true, options, cancellationToken, memberName, sourceFilePath, sourceLineNumber);
+		=> SaveAsync(traceInfo, true, options, cancellationToken, memberName, sourceFilePath, sourceLineNumber);
 
 	public virtual Task<int> SaveAsync(
+		ITraceInfo? traceInfo,
 		bool acceptAllChangesOnSuccess,
 		CancellationToken cancellationToken = default,
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0)
-		=> SaveAsync(acceptAllChangesOnSuccess, null, cancellationToken, memberName, sourceFilePath, sourceLineNumber);
+		=> SaveAsync(traceInfo, acceptAllChangesOnSuccess, null, cancellationToken, memberName, sourceFilePath, sourceLineNumber);
 
 	public virtual async Task<int> SaveAsync(
+		ITraceInfo? traceInfo,
 		bool acceptAllChangesOnSuccess,
 		SaveOptions? options,
 		CancellationToken cancellationToken = default,
