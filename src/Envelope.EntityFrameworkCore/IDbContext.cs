@@ -1,5 +1,6 @@
-﻿using Envelope.EntityFrameworkCore.QueryCache;
-using Envelope.Services;
+﻿using Envelope.Database;
+using Envelope.EntityFrameworkCore.QueryCache;
+using Envelope.Trace;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -28,18 +29,27 @@ public interface IDbContext : IDisposable, IAsyncDisposable
 		[CallerLineNumber] int sourceLineNumber = 0);
 
 	int Save(
+		ITraceInfo traceInfo,
+		[CallerMemberName] string memberName = "",
+		[CallerFilePath] string sourceFilePath = "",
+		[CallerLineNumber] int sourceLineNumber = 0);
+
+	int Save(
+		ITraceInfo? traceInfo,
 		SaveOptions? options,
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0);
 
 	int Save(
+		ITraceInfo? traceInfo,
 		bool acceptAllChangesOnSuccess,
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0);
 
 	int Save(
+		ITraceInfo? traceInfo,
 		bool acceptAllChangesOnSuccess,
 		SaveOptions? options,
 		[CallerMemberName] string memberName = "",
@@ -53,6 +63,14 @@ public interface IDbContext : IDisposable, IAsyncDisposable
 		[CallerLineNumber] int sourceLineNumber = 0);
 
 	Task<int> SaveAsync(
+		ITraceInfo traceInfo,
+		CancellationToken cancellationToken = default,
+		[CallerMemberName] string memberName = "",
+		[CallerFilePath] string sourceFilePath = "",
+		[CallerLineNumber] int sourceLineNumber = 0);
+
+	Task<int> SaveAsync(
+		ITraceInfo? traceInfo,
 		SaveOptions? options,
 		CancellationToken cancellationToken = default,
 		[CallerMemberName] string memberName = "",
@@ -60,6 +78,7 @@ public interface IDbContext : IDisposable, IAsyncDisposable
 		[CallerLineNumber] int sourceLineNumber = 0);
 
 	Task<int> SaveAsync(
+		ITraceInfo? traceInfo,
 		bool acceptAllChangesOnSuccess,
 		CancellationToken cancellationToken = default,
 		[CallerMemberName] string memberName = "",
@@ -67,6 +86,7 @@ public interface IDbContext : IDisposable, IAsyncDisposable
 		[CallerLineNumber] int sourceLineNumber = 0);
 
 	Task<int> SaveAsync(
+		ITraceInfo? traceInfo,
 		bool acceptAllChangesOnSuccess,
 		SaveOptions? options,
 		CancellationToken cancellationToken = default,

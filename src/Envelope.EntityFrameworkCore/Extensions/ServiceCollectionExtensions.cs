@@ -17,7 +17,7 @@ public static class ServiceCollectionExtensions
 			throw new ArgumentNullException(nameof(dbContextTransactionBehaviorObserverFactory));
 
 		services.TryAddTransient<ITransactionCoordinator, TransactionCoordinator>();
-		services.TryAddTransient<ITransactionCacheFactoryStore>(sp => new TransactionCacheFactoryStore(
+		services.AddTransient<ITransactionCacheFactoryStore>(sp => new TransactionCacheFactoryStore(
 			_dbContextCacheType,
 			serviceProvider => new DbContextCache(serviceProvider, dbContextTransactionBehaviorObserverFactory)));
 		return services;

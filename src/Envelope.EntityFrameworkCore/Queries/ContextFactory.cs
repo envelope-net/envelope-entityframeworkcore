@@ -9,10 +9,17 @@ namespace Envelope.EntityFrameworkCore.Queries;
 public class ContextFactory<TContext> : IDisposable, IAsyncDisposable
 	where TContext : IDbContext
 {
-	private readonly IServiceProvider _serviceProvider;
-	private readonly Lazy<ITransactionCoordinator> _transactionCoordiantor;
+	private readonly Lazy<ITransactionCoordinator> _transactionCoordinator;
 
 	private bool _disposed;
+
+	public IServiceProvider ServiceProvider { get; }
+	public ITransactionCoordinator? TransactionCoordinator => _transactionCoordinator.IsValueCreated
+		? _transactionCoordinator.Value
+		: null;
+
+	public ITransactionCoordinator GetTransactionCoordinator()
+		=> _transactionCoordinator.Value;
 
 	public static ContextFactory<TContext> Create<TOtherContext>(ContextFactory<TOtherContext> factory)
 		where TOtherContext : IDbContext
@@ -21,54 +28,54 @@ public class ContextFactory<TContext> : IDisposable, IAsyncDisposable
 			throw new ArgumentNullException(nameof(factory));
 
 		return new ContextFactory<TContext>(
-			factory._serviceProvider,
-			factory._transactionCoordiantor);
+			factory.ServiceProvider,
+			factory._transactionCoordinator);
 	}
 
 	private ContextFactory(
 		IServiceProvider serviceProvider,
-		Lazy<ITransactionCoordinator> transactionCoordiantor)
+		Lazy<ITransactionCoordinator> transactionCoordinator)
 	{
-		_serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-		_transactionCoordiantor = transactionCoordiantor ?? throw new ArgumentNullException(nameof(transactionCoordiantor));
+		ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+		_transactionCoordinator = transactionCoordinator ?? throw new ArgumentNullException(nameof(transactionCoordinator));
 	}
 
 	public ContextFactory(
 		IServiceProvider serviceProvider,
 		DbConnectionFactoryAsync dbConnectionFactoryAsync)
 	{
-		_serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+		ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
 		if (dbConnectionFactoryAsync == null)
 			throw new ArgumentNullException(nameof(dbConnectionFactoryAsync));
 
-		_transactionCoordiantor = new(() => _serviceProvider.GetRequiredService<ITransactionCoordinator>());
+		_transactionCoordinator = new(() => ServiceProvider.GetRequiredService<ITransactionCoordinator>());
 	}
 
 	public TContext GetOrCreateDbContextWithoutTransaction(DbConnection? externalDbConnection = null, string? connectionString = null)
-		=> _transactionCoordiantor.Value.TransactionController.GetTransactionCache<IDbContextCache>()
+		=> _transactionCoordinator.Value.TransactionController.GetTransactionCache<IDbContextCache>()
 			.GetOrCreateIDbContextWithoutTransaction<TContext>(externalDbConnection, connectionString, null, null);
 
 	public TContext GetOrCreateDbContextWithExistingTransaction(IDbContextTransaction dbContextTransaction)
-		=> _transactionCoordiantor.Value.TransactionController.GetTransactionCache<IDbContextCache>()
+		=> _transactionCoordinator.Value.TransactionController.GetTransactionCache<IDbContextCache>()
 			.GetOrCreateIDbContextWithExistingTransaction<TContext>(dbContextTransaction, null, null, null);
 
 	public Task<TContext> GetOrCreateDbContextWithNewTransactionAsync(CancellationToken cancellationToken = default)
-		=> _transactionCoordiantor.Value.TransactionController.GetTransactionCache<IDbContextCache>()
-			.GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(_transactionCoordiantor.Value.TransactionController.GetTransactionCache<IDbTransactionFactory>(), _transactionCoordiantor.Value, null, null, cancellationToken);
+		=> _transactionCoordinator.Value.TransactionController.GetTransactionCache<IDbContextCache>()
+			.GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(_transactionCoordinator.Value.TransactionController.GetTransactionCache<IDbTransactionFactory>(), _transactionCoordinator.Value, null, null, cancellationToken);
 
 	public Task<TContext> GetOrCreateDbContextWithNewTransactionAsync(
-		ITransactionCoordinator transactionCoordiantor,
+		ITransactionCoordinator transactionCoordinator,
 		CancellationToken cancellationToken = default)
 	{
-		if (transactionCoordiantor == null)
-			throw new ArgumentNullException(nameof(transactionCoordiantor));
+		if (transactionCoordinator == null)
+			throw new ArgumentNullException(nameof(transactionCoordinator));
 
-		var cache = transactionCoordiantor.TransactionController.GetTransactionCache<IDbContextCache>();
+		var cache = transactionCoordinator.TransactionController.GetTransactionCache<IDbContextCache>();
 		var result =
 			cache.GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(
-				transactionCoordiantor.TransactionController.GetTransactionCache<IDbTransactionFactory>(),
-				transactionCoordiantor,
+				transactionCoordinator.TransactionController.GetTransactionCache<IDbTransactionFactory>(),
+				transactionCoordinator,
 				null,
 				null,
 				cancellationToken);
@@ -91,8 +98,8 @@ public class ContextFactory<TContext> : IDisposable, IAsyncDisposable
 
 	protected virtual async ValueTask DisposeAsyncCoreAsync()
 	{
-		if (_transactionCoordiantor.IsValueCreated)
-			await _transactionCoordiantor.Value.DisposeAsync();
+		if (_transactionCoordinator.IsValueCreated)
+			await _transactionCoordinator.Value.DisposeAsync();
 	}
 
 	protected virtual void Dispose(bool disposing)
@@ -104,8 +111,8 @@ public class ContextFactory<TContext> : IDisposable, IAsyncDisposable
 
 		if (disposing)
 		{
-			if (_transactionCoordiantor.IsValueCreated)
-				_transactionCoordiantor.Value.Dispose();
+			if (_transactionCoordinator.IsValueCreated)
+				_transactionCoordinator.Value.Dispose();
 		}
 	}
 

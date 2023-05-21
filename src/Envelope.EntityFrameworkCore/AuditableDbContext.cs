@@ -1,10 +1,11 @@
-﻿using Envelope.EntityFrameworkCore.Internal;
+﻿using Envelope.Database;
+using Envelope.EntityFrameworkCore.Internal;
 using Envelope.Model;
 using Envelope.Model.Audit;
 using Envelope.Model.Concurrence;
 using Envelope.Model.Correlation;
 using Envelope.Model.Synchronyzation;
-using Envelope.Services;
+using Envelope.Trace;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Runtime.CompilerServices;
@@ -32,23 +33,33 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0)
-		=> Save(true, null, memberName, sourceFilePath, sourceLineNumber);
+		=> Save(null, true, null, memberName, sourceFilePath, sourceLineNumber);
 
 	public override int Save(
+		ITraceInfo traceInfo,
+		[CallerMemberName] string memberName = "",
+		[CallerFilePath] string sourceFilePath = "",
+		[CallerLineNumber] int sourceLineNumber = 0)
+		=> Save(traceInfo, true, null, memberName, sourceFilePath, sourceLineNumber);
+
+	public override int Save(
+		ITraceInfo? traceInfo,
 		SaveOptions? options,
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0)
-		=> Save(true, options, memberName, sourceFilePath, sourceLineNumber);
+		=> Save(traceInfo, true, options, memberName, sourceFilePath, sourceLineNumber);
 
 	public override int Save(
+		ITraceInfo? traceInfo,
 		bool acceptAllChangesOnSuccess,
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0)
-		=> Save(acceptAllChangesOnSuccess, null, memberName, sourceFilePath, sourceLineNumber);
+		=> Save(traceInfo, acceptAllChangesOnSuccess, null, memberName, sourceFilePath, sourceLineNumber);
 
 	public override int Save(
+		ITraceInfo? traceInfo,
 		bool acceptAllChangesOnSuccess,
 		SaveOptions? options,
 		[CallerMemberName] string memberName = "",
@@ -65,7 +76,7 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 		//}
 
 		var auditCorrelationId = Guid.NewGuid();
-		var auditEntriesWithTempProperty = OnBeforeSaveChanges(auditCorrelationId, options);
+		var auditEntriesWithTempProperty = OnBeforeSaveChanges(auditCorrelationId, options, traceInfo);
 
 		var result = base.SaveWithoutScope(acceptAllChangesOnSuccess);
 
@@ -84,25 +95,36 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0)
-		=> SaveAsync(true, null, cancellationToken, memberName, sourceFilePath, sourceLineNumber);
+		=> SaveAsync(null, true, null, cancellationToken, memberName, sourceFilePath, sourceLineNumber);
 
 	public override Task<int> SaveAsync(
+		ITraceInfo traceInfo,
+		CancellationToken cancellationToken = default,
+		[CallerMemberName] string memberName = "",
+		[CallerFilePath] string sourceFilePath = "",
+		[CallerLineNumber] int sourceLineNumber = 0)
+		=> SaveAsync(traceInfo, true, null, cancellationToken, memberName, sourceFilePath, sourceLineNumber);
+
+	public override Task<int> SaveAsync(
+		ITraceInfo? traceInfo,
 		SaveOptions? options,
 		CancellationToken cancellationToken = default,
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0)
-		=> SaveAsync(true, options, cancellationToken, memberName, sourceFilePath, sourceLineNumber);
+		=> SaveAsync(traceInfo, true, options, cancellationToken, memberName, sourceFilePath, sourceLineNumber);
 
 	public override Task<int> SaveAsync(
+		ITraceInfo? traceInfo,
 		bool acceptAllChangesOnSuccess,
 		CancellationToken cancellationToken = default,
 		[CallerMemberName] string memberName = "",
 		[CallerFilePath] string sourceFilePath = "",
 		[CallerLineNumber] int sourceLineNumber = 0)
-		=> SaveAsync(acceptAllChangesOnSuccess, null, cancellationToken, memberName, sourceFilePath, sourceLineNumber);
+		=> SaveAsync(traceInfo, acceptAllChangesOnSuccess, null, cancellationToken, memberName, sourceFilePath, sourceLineNumber);
 
 	public override async Task<int> SaveAsync(
+		ITraceInfo? traceInfo,
 		bool acceptAllChangesOnSuccess,
 		SaveOptions? options,
 		CancellationToken cancellationToken = default,
@@ -120,7 +142,7 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 		//}
 
 		var auditCorrelationId = Guid.NewGuid();
-		var auditEntriesWithTempProperty = OnBeforeSaveChanges(auditCorrelationId, options);
+		var auditEntriesWithTempProperty = OnBeforeSaveChanges(auditCorrelationId, options, traceInfo);
 
 		var result = await base.SaveWithoutScopeAsync(acceptAllChangesOnSuccess, options, cancellationToken);
 
@@ -134,7 +156,7 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 		return result;
 	}
 
-	private List<AuditEntryInternal> OnBeforeSaveChanges(Guid auditCorrelationId, SaveOptions? options)
+	private List<AuditEntryInternal> OnBeforeSaveChanges(Guid auditCorrelationId, SaveOptions? options, ITraceInfo? traceInfo)
 	{
 		ChangeTracker.DetectChanges();
 
@@ -218,14 +240,14 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 				{
 					case EntityState.Added:
 						auditable.AuditCreatedUtc = nowUtc;
-						auditable.IdAuditCreatedBy = _applicationContext.TraceInfo.IdUser;
+						auditable.IdAuditCreatedBy = (traceInfo ?? _applicationContext.TraceInfo).IdUser;
 						break;
 
 					case EntityState.Modified:
 						if (entry.Properties.Any(x => x.IsModified))
 						{
 							auditable.AuditModifiedUtc = nowUtc;
-							auditable.IdAuditModifiedBy = _applicationContext.TraceInfo.IdUser;
+							auditable.IdAuditModifiedBy = (traceInfo ?? _applicationContext.TraceInfo).IdUser;
 						}
 						break;
 
@@ -236,9 +258,9 @@ public abstract class AuditableDbContext<TAuditEntry> : DbContextBase, IAuditabl
 
 			var auditEntry = new AuditEntryInternal(entry)
 			{
-				IdUser = _applicationContext.TraceInfo.IdUser,
+				IdUser = (traceInfo ?? _applicationContext.TraceInfo).IdUser,
 				CreatedUtc = nowUtc,
-				CorrelationId = _applicationContext.TraceInfo.CorrelationId,
+				CorrelationId = (traceInfo ?? _applicationContext.TraceInfo).CorrelationId,
 				CommandQueryName = this.CommandQueryName,
 				IdCommandQuery = this.IdCommandQuery
 			};
