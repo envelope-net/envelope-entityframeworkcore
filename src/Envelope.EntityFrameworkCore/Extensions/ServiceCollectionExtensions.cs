@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Envelope.Transactions;
 using Envelope.Database.PostgreSql;
 
-namespace Envelope.EntityFrameworkCore.Extensions;
+namespace Envelope.EntityFrameworkCore;
 
 public static class ServiceCollectionExtensions
 {
