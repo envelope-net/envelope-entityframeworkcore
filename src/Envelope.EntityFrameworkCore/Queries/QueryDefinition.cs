@@ -39,7 +39,7 @@ public abstract class QueryDefinition<TContext, T> : IQueryDefinition<TContext, 
 		ITraceInfo traceInfo,
 		CancellationToken cancellationToken = default);
 
-	public async Task<IQueryable<T>> WhereAsync(
+	public async Task<IQueryable<T>> ApplyIncludesThenWhereAsync(
 		Action<QueryableBuilder<T>>? queryableBuilder,
 		Expression<Func<T, bool>>? predicate,
 		CancellationToken cancellationToken = default)
@@ -48,12 +48,8 @@ public abstract class QueryDefinition<TContext, T> : IQueryDefinition<TContext, 
 			? (await GetDefaultQueryAsync(cancellationToken))
 				.ApplyIncludes(queryableBuilder)
 				.Where(predicate)
-				.ApplySort(queryableBuilder)
-				.ApplyPaging(queryableBuilder)
 			: (await GetDefaultQueryAsync(cancellationToken))
-				.ApplyIncludes(queryableBuilder)
-				.ApplySort(queryableBuilder)
-				.ApplyPaging(queryableBuilder);
+				.ApplyIncludes(queryableBuilder);
 	}
 
 	public async Task<IQueryable<T>> ApplyQueryBuilderAsync(
