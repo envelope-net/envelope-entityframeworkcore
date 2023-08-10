@@ -47,13 +47,27 @@ public class ThenIncludeDescriptorBuilder<TEntity, TProperty, TNextProperty> : I
 		return thenIncludeDescriptorBuilder;
 	}
 
+	IEnumerable<TEntity> IQueryModifier<TEntity>.ApplyIncludes(IEnumerable<TEntity> enumerable)
+		=> enumerable;
+
+	IQueryable<TEntity> IQueryModifier<TEntity>.ApplyIncludes(IQueryable<TEntity> queryable)
+		=> queryable;
+
+	IEnumerable<TEntity> IQueryModifier<TEntity>.ApplySort(IEnumerable<TEntity> enumerable)
+		=> enumerable;
+
+	IQueryable<TEntity> IQueryModifier<TEntity>.ApplySort(IQueryable<TEntity> queryable)
+		=> queryable;
+
+	IEnumerable<TEntity> IQueryModifier<TEntity>.ApplyPaging(IEnumerable<TEntity> enumerable)
+		=> enumerable;
+
+	IQueryable<TEntity> IQueryModifier<TEntity>.ApplyPaging(IQueryable<TEntity> queryable)
+		=> queryable;
+
 	IEnumerable<TEntity> IQueryModifier<TEntity>.Apply(IEnumerable<TEntity> enumerable)
-	{
-		throw new NotSupportedException();
-	}
+		=> enumerable;
 
 	IQueryable<TEntity> IQueryModifier<TEntity>.Apply(IQueryable<TEntity> queryable)
-	{
-		throw new NotSupportedException();
-	}
+		=> queryable;
 }

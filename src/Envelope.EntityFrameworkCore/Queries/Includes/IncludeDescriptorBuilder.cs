@@ -47,6 +47,24 @@ public class IncludeDescriptorBuilder<TEntity, TProperty> : IIncludeDescriptorBu
 		return thenIncludeDescriptorBuilder;
 	}
 
+	public IEnumerable<TEntity> ApplyIncludes(IEnumerable<TEntity> enumerable)
+		=> _includeDescriptor.Include(enumerable.AsQueryable());
+
+	public IQueryable<TEntity> ApplyIncludes(IQueryable<TEntity> queryable)
+		=> _includeDescriptor.Include(queryable);
+
+	public IEnumerable<TEntity> ApplySort(IEnumerable<TEntity> enumerable)
+		=> enumerable;
+
+	public IQueryable<TEntity> ApplySort(IQueryable<TEntity> queryable)
+		=> queryable;
+
+	public IEnumerable<TEntity> ApplyPaging(IEnumerable<TEntity> enumerable)
+		=> enumerable;
+
+	public IQueryable<TEntity> ApplyPaging(IQueryable<TEntity> queryable)
+		=> queryable;
+
 	IEnumerable<TEntity> IQueryModifier<TEntity>.Apply(IEnumerable<TEntity> enumerable)
 		=> _includeDescriptor.Include(enumerable.AsQueryable());
 

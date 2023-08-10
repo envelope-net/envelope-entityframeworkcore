@@ -33,6 +33,48 @@ public static class QueryableExtensions
 		return ((Envelope.Queries.IQueryModifier<T>)builder).Apply(source);
 	}
 
+	public static IQueryable<T> ApplyIncludes<T>(this IQueryable<T> source, Action<QueryableBuilder<T>>? queryableBuilder)
+		where T : class
+	{
+		Throw.ArgumentNull(source);
+
+		if (queryableBuilder == null)
+			return source;
+
+		var builder = new QueryableBuilder<T>();
+		queryableBuilder.Invoke(builder);
+
+		return ((Envelope.Queries.IQueryModifier<T>)builder).ApplyIncludes(source);
+	}
+
+	public static IQueryable<T> ApplyPaging<T>(this IQueryable<T> source, Action<QueryableBuilder<T>>? queryableBuilder)
+		where T : class
+	{
+		Throw.ArgumentNull(source);
+
+		if (queryableBuilder == null)
+			return source;
+
+		var builder = new QueryableBuilder<T>();
+		queryableBuilder.Invoke(builder);
+
+		return ((Envelope.Queries.IQueryModifier<T>)builder).ApplyPaging(source);
+	}
+
+	public static IQueryable<T> ApplySort<T>(this IQueryable<T> source, Action<QueryableBuilder<T>>? queryableBuilder)
+		where T : class
+	{
+		Throw.ArgumentNull(source);
+
+		if (queryableBuilder == null)
+			return source;
+
+		var builder = new QueryableBuilder<T>();
+		queryableBuilder.Invoke(builder);
+
+		return ((Envelope.Queries.IQueryModifier<T>)builder).ApplySort(source);
+	}
+
 	//public static IEnumerable ToDataSourceResult(
 	//	this IEnumerable enumerable,
 	//	DataSourceRequest request)

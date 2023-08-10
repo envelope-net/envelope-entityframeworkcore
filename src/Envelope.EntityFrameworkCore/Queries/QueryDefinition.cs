@@ -1,4 +1,7 @@
-﻿using Envelope.Trace;
+﻿using Envelope.EntityFrameworkCore.Extensions;
+using Envelope.Trace;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Envelope.EntityFrameworkCore.Queries;
 
@@ -30,7 +33,35 @@ public abstract class QueryDefinition<TContext, T> : IQueryDefinition<TContext, 
 	protected virtual Task<TContext> GetContextAsync(CancellationToken cancellationToken = default)
 		=> QueryOptions.GetContextAsync(cancellationToken);
 
+	protected abstract Task<IQueryable<T>> GetDefaultQueryAsync(CancellationToken cancellationToken = default);
+
 	public abstract Task<IQueryable<T>> GetQueryAsync(
 		ITraceInfo traceInfo,
 		CancellationToken cancellationToken = default);
+
+	public async Task<IQueryable<T>> WhereAsync(
+		Action<QueryableBuilder<T>>? queryableBuilder,
+		Expression<Func<T, bool>>? predicate,
+		CancellationToken cancellationToken = default)
+	{
+		return predicate != null
+			? (await GetDefaultQueryAsync(cancellationToken))
+				.ApplyIncludes(queryableBuilder)
+				.Where(predicate)
+				.ApplySort(queryableBuilder)
+				.ApplyPaging(queryableBuilder)
+			: (await GetDefaultQueryAsync(cancellationToken))
+				.ApplyIncludes(queryableBuilder)
+				.ApplySort(queryableBuilder)
+				.ApplyPaging(queryableBuilder);
+	}
+
+	public async Task<IQueryable<T>> ApplyQueryBuilderAsync(
+		CancellationToken cancellationToken = default)
+	{
+		return (await GetDefaultQueryAsync(cancellationToken))
+			.ApplyIncludes(QueryableBuilder)
+			.ApplySort(QueryableBuilder)
+			.ApplyPaging(QueryableBuilder);
+	}
 }

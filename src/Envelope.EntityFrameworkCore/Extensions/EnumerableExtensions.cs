@@ -20,6 +20,48 @@ public static class EnumerableExtensions
 		return ((Envelope.Queries.IQueryModifier<T>)builder).Apply(source);
 	}
 
+	public static IEnumerable<T> ApplyIncludes<T>(this IEnumerable<T> source, Action<QueryableBuilder<T>>? queryableBuilder)
+		where T : class
+	{
+		Throw.ArgumentNull(source);
+
+		if (queryableBuilder == null)
+			return source;
+
+		var builder = new QueryableBuilder<T>();
+		queryableBuilder.Invoke(builder);
+
+		return ((Envelope.Queries.IQueryModifier<T>)builder).ApplyIncludes(source);
+	}
+
+	public static IEnumerable<T> ApplyPaging<T>(this IEnumerable<T> source, Action<QueryableBuilder<T>>? queryableBuilder)
+		where T : class
+	{
+		Throw.ArgumentNull(source);
+
+		if (queryableBuilder == null)
+			return source;
+
+		var builder = new QueryableBuilder<T>();
+		queryableBuilder.Invoke(builder);
+
+		return ((Envelope.Queries.IQueryModifier<T>)builder).ApplyPaging(source);
+	}
+
+	public static IEnumerable<T> ApplySort<T>(this IEnumerable<T> source, Action<QueryableBuilder<T>>? queryableBuilder)
+		where T : class
+	{
+		Throw.ArgumentNull(source);
+
+		if (queryableBuilder == null)
+			return source;
+
+		var builder = new QueryableBuilder<T>();
+		queryableBuilder.Invoke(builder);
+
+		return ((Envelope.Queries.IQueryModifier<T>)builder).ApplySort(source);
+	}
+
 	public static ReadOnlyCollection<T> ToReadOnlyCollection<T>(this IEnumerable<T> sequence)
 	{
 		if (sequence == null)
