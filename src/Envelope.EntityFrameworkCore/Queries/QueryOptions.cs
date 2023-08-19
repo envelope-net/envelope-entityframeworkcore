@@ -11,6 +11,7 @@ public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 	private bool _disposed;
 
 	public TContext? Context { get; }
+	public string? ConnectionId { get; }
 	public ContextFactory<TContext> ContextFactory { get; }
 	public DbConnection? ExternalDbConnection { get; }
 	public string? ConnectionString { get; }
@@ -63,9 +64,10 @@ public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 	
-	internal QueryOptions(TContext context)
+	internal QueryOptions(TContext context, string? connectionId)
 	{
 		Context = context ?? throw new ArgumentNullException(nameof(context));
+		ConnectionId = connectionId;
 	}
 
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
@@ -114,7 +116,9 @@ public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 		TransactionCoordinator = transactionCoordinator ?? throw new ArgumentNullException(nameof(transactionCoordinator));
 	}
 
-	public Task<TContext> GetContextAsync(CancellationToken cancellationToken = default)
+	public Task<TContext> GetContextAsync(
+		string connectionId,
+		CancellationToken cancellationToken = default)
 	{
 		if (Context != null)
 		{
@@ -122,7 +126,10 @@ public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 		}
 		else if (TransactionCoordinator != null)
 		{
-			return ContextFactory.GetOrCreateDbContextWithNewTransactionAsync(TransactionCoordinator, cancellationToken);
+			if (string.IsNullOrWhiteSpace(connectionId))
+				connectionId = ConnectionId!;
+
+			return ContextFactory.GetOrCreateDbContextWithNewTransactionAsync(TransactionCoordinator, connectionId, cancellationToken);
 		}
 		else if (DbContextTransaction != null)
 		{
@@ -134,7 +141,10 @@ public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 		}
 		else
 		{
-			return ContextFactory.GetOrCreateDbContextWithNewTransactionAsync(cancellationToken);
+			if (string.IsNullOrWhiteSpace(connectionId))
+				connectionId = ConnectionId!;
+
+			return ContextFactory.GetOrCreateDbContextWithNewTransactionAsync(connectionId, cancellationToken);
 		}
 	}
 

@@ -60,12 +60,15 @@ public class ContextFactory<TContext> : IDisposable, IAsyncDisposable
 		=> _transactionCoordinator.Value.TransactionController.GetTransactionCache<IDbContextCache>()
 			.GetOrCreateIDbContextWithExistingTransaction<TContext>(dbContextTransaction, null, null, null);
 
-	public Task<TContext> GetOrCreateDbContextWithNewTransactionAsync(CancellationToken cancellationToken = default)
+	public Task<TContext> GetOrCreateDbContextWithNewTransactionAsync(
+		string connectionId,
+		CancellationToken cancellationToken = default)
 		=> _transactionCoordinator.Value.TransactionController.GetTransactionCache<IDbContextCache>()
-			.GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(_transactionCoordinator.Value.TransactionController.GetTransactionCache<IDbTransactionFactory>(), _transactionCoordinator.Value, null, null, cancellationToken);
+			.GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(_transactionCoordinator.Value.TransactionController.GetTransactionCache<IDbTransactionFactory>(), connectionId, _transactionCoordinator.Value, null, null, cancellationToken);
 
 	public Task<TContext> GetOrCreateDbContextWithNewTransactionAsync(
 		ITransactionCoordinator transactionCoordinator,
+		string connectionId,
 		CancellationToken cancellationToken = default)
 	{
 		if (transactionCoordinator == null)
@@ -75,6 +78,7 @@ public class ContextFactory<TContext> : IDisposable, IAsyncDisposable
 		var result =
 			cache.GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(
 				transactionCoordinator.TransactionController.GetTransactionCache<IDbTransactionFactory>(),
+				connectionId,
 				transactionCoordinator,
 				null,
 				null,

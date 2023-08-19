@@ -6,7 +6,9 @@ namespace Envelope.EntityFrameworkCore;
 
 public static class TransactionCoordinatorExtensions
 {
-	public static TContext GetOrCreateDbContextWithNewTransaction<TContext>(this ITransactionCoordinator transactionCoordinator)
+	public static TContext GetOrCreateDbContextWithNewTransaction<TContext>(
+		this ITransactionCoordinator transactionCoordinator,
+		string connectionId)
 		where TContext : IDbContext
 	{
 		if (transactionCoordinator == null)
@@ -15,20 +17,24 @@ public static class TransactionCoordinatorExtensions
 		return transactionCoordinator.TransactionController.GetTransactionCache<IDbContextCache>()
 			.GetOrCreateIDbContextWithExistingTransaction<TContext>(
 				transactionCoordinator.TransactionController.GetTransactionCache<IDbTransactionFactory>(),
+				connectionId,
 				transactionCoordinator,
 				null,
 				null);
 	}
 
-	public static QueryOptions<TContext> GetOrCreateQueryOptionsWithNewTransaction<TContext>(this ITransactionCoordinator transactionCoordinator)
+	public static QueryOptions<TContext> GetOrCreateQueryOptionsWithNewTransaction<TContext>(
+		this ITransactionCoordinator transactionCoordinator,
+		string connectionId)
 		where TContext : IDbContext
 	{
-		var dbContext = GetOrCreateDbContextWithNewTransaction<TContext>(transactionCoordinator);
-		return dbContext.CreateQueryOptions();
+		var dbContext = GetOrCreateDbContextWithNewTransaction<TContext>(transactionCoordinator, connectionId);
+		return dbContext.CreateQueryOptions(connectionId);
 	}
 
 	public static Task<TContext> GetOrCreateDbContextWithNewTransactionAsync<TContext>(
 		this ITransactionCoordinator transactionCoordinator,
+		string connectionId,
 		CancellationToken cancellationToken = default)
 		where TContext : IDbContext
 	{
@@ -38,6 +44,7 @@ public static class TransactionCoordinatorExtensions
 		return transactionCoordinator.TransactionController.GetTransactionCache<IDbContextCache>()
 			.GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(
 				transactionCoordinator.TransactionController.GetTransactionCache<IDbTransactionFactory>(),
+				connectionId,
 				transactionCoordinator,
 				null,
 				null,
@@ -46,10 +53,11 @@ public static class TransactionCoordinatorExtensions
 
 	public static async Task<QueryOptions<TContext>> GetOrCreateQueryOptionsWithNewTransactionAsync<TContext>(
 		this ITransactionCoordinator transactionCoordinator,
+		string connectionId,
 		CancellationToken cancellationToken = default)
 		where TContext : IDbContext
 	{
-		var dbContext = await GetOrCreateDbContextWithNewTransactionAsync<TContext>(transactionCoordinator, cancellationToken);
-		return dbContext.CreateQueryOptions();
+		var dbContext = await GetOrCreateDbContextWithNewTransactionAsync<TContext>(transactionCoordinator, connectionId, cancellationToken);
+		return dbContext.CreateQueryOptions(connectionId);
 	}
 }

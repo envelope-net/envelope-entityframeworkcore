@@ -67,6 +67,7 @@ public static partial class DbContextFactory
 
 	public static TContext CreateNewDbContext<TContext, TIdentity>(
 		IServiceProvider serviceProvider,
+		string connectionId,
 		IDbTransactionFactory dbTransactionFactory,
 		out IDbContextTransaction? newDbContextTransaction,
 		string? commandQueryName = null,
@@ -80,7 +81,7 @@ public static partial class DbContextFactory
 		if (dbTransactionFactory == null)
 			throw new ArgumentNullException(nameof(dbTransactionFactory));
 
-		dbTransactionFactory.Initialize();
+		dbTransactionFactory.Initialize(connectionId);
 
 		var dbContext = serviceProvider.GetRequiredService<TContext>();
 		if (dbContext is DbContextBase<TIdentity> dbContextBase)
@@ -96,6 +97,7 @@ public static partial class DbContextFactory
 
 	public static async Task<(TContext dbContext, IDbContextTransaction? newDbContextTransaction)> CreateNewDbContextAsync<TContext, TIdentity>(
 		IServiceProvider serviceProvider,
+		string connectionId,
 		IDbTransactionFactory dbTransactionFactory,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null,
@@ -109,7 +111,7 @@ public static partial class DbContextFactory
 		if (dbTransactionFactory == null)
 			throw new ArgumentNullException(nameof(dbTransactionFactory));
 
-		await dbTransactionFactory.InitializeAsync();
+		await dbTransactionFactory.InitializeAsync(connectionId);
 
 		var context = serviceProvider.GetRequiredService<TContext>();
 		if (context is DbContextBase<TIdentity> dbContextBase)
@@ -385,6 +387,7 @@ public static partial class DbContextFactory
 
 	public static TContext CreateNewIDbContext<TContext, TIdentity>(
 		IServiceProvider serviceProvider,
+		string connectionId,
 		IDbTransactionFactory dbTransactionFactory,
 		out IDbContextTransaction? newDbContextTransaction,
 		string? commandQueryName = null,
@@ -398,7 +401,7 @@ public static partial class DbContextFactory
 		if (dbTransactionFactory == null)
 			throw new ArgumentNullException(nameof(dbTransactionFactory));
 
-		dbTransactionFactory.Initialize();
+		dbTransactionFactory.Initialize(connectionId);
 
 		var dbContext = serviceProvider.GetRequiredService<TContext>();
 		if (dbContext is DbContextBase<TIdentity> dbContextBase)
@@ -416,6 +419,7 @@ public static partial class DbContextFactory
 
 	public static async Task<(TContext dbContext, IDbContextTransaction? newDbContextTransaction)> CreateNewIDbContextAsync<TContext, TIdentity>(
 		IServiceProvider serviceProvider,
+		string connectionId,
 		IDbTransactionFactory dbTransactionFactory,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null,
@@ -429,7 +433,7 @@ public static partial class DbContextFactory
 		if (dbTransactionFactory == null)
 			throw new ArgumentNullException(nameof(dbTransactionFactory));
 
-		await dbTransactionFactory.InitializeAsync();
+		await dbTransactionFactory.InitializeAsync(connectionId);
 
 		var context = serviceProvider.GetRequiredService<TContext>();
 		if (context is DbContextBase<TIdentity> dbContextBase)

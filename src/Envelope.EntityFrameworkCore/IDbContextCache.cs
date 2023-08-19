@@ -125,6 +125,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <inheritdoc />
 	TContext GetOrCreateDbContextWithExistingTransaction<TContext>(
 		IDbTransactionFactory dbTransactionFactory,
+		string connectionId,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
@@ -133,6 +134,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <inheritdoc />
 	Task<TContext> GetOrCreateDbContextWithExistingTransactionAsync<TContext>(
 		IDbTransactionFactory dbTransactionFactory,
+		string connectionId,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null,
@@ -323,6 +325,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 
 	TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
 		IDbTransactionFactory dbTransactionFactory,
+		string connectionId,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
@@ -330,6 +333,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 
 	Task<TContext> GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(
 		IDbTransactionFactory dbTransactionFactory,
+		string connectionId,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null,
@@ -403,6 +407,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
 		string key,
 		IDbTransactionFactory dbTransactionFactory,
+		string connectionId,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
@@ -412,6 +417,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	Task<TContext> GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(
 		string key,
 		IDbTransactionFactory dbTransactionFactory,
+		string connectionId,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null,

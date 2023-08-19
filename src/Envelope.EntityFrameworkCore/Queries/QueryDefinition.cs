@@ -1,6 +1,5 @@
 ﻿using Envelope.EntityFrameworkCore.Extensions;
 using Envelope.Trace;
-using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace Envelope.EntityFrameworkCore.Queries;
@@ -30,8 +29,10 @@ public abstract class QueryDefinition<TContext, T> : IQueryDefinition<TContext, 
 		QueryableBuilder = queryableBuilder;
 	}
 
-	protected virtual Task<TContext> GetContextAsync(CancellationToken cancellationToken = default)
-		=> QueryOptions.GetContextAsync(cancellationToken);
+	protected virtual Task<TContext> GetContextAsync(
+		string connectionId,
+		CancellationToken cancellationToken = default)
+		=> QueryOptions.GetContextAsync(connectionId, cancellationToken);
 
 	protected abstract Task<IQueryable<T>> GetDefaultQueryAsync(CancellationToken cancellationToken = default);
 
