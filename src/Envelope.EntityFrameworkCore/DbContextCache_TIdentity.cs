@@ -465,12 +465,14 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 	/// <inheritdoc />
 	public TContext CreateNewIDbContext<TContext>(
+		string connectionId,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
 		where TContext : IDbContext
 		=> DbContextFactory.CreateNewIDbContextWithoutTransaction<TContext, TIdentity>(
+			connectionId,
 			_serviceProvider,
 			externalDbConnection,
 			connectionString,
@@ -479,6 +481,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 	/// <inheritdoc />
 	public TContext CreateNewIDbContextWithNewTransaction<TContext>(
+		string connectionId,
 		out IDbContextTransaction newDbContextTransaction,
 		ITransactionCoordinator? transactionCoordinator = null,
 		IsolationLevel? transactionIsolationLevel = null,
@@ -490,6 +493,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 	{
 		var dbContext =
 			DbContextFactory.CreateNewIDbContext<TContext, TIdentity>(
+				connectionId,
 				_serviceProvider,
 				out newDbContextTransaction,
 				transactionIsolationLevel,
@@ -510,6 +514,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 	/// <inheritdoc />
 	public TContext CreateNewIDbContextWithExistingTransaction<TContext>(
+		string connectionId,
 		IDbContextTransaction dbContextTransaction,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
@@ -517,6 +522,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 		where TContext : IDbContext
 	{
 		var result = DbContextFactory.CreateNewIDbContext<TContext, TIdentity>(
+			connectionId,
 			_serviceProvider,
 			dbContextTransaction,
 			out var newDbContextTransaction,
@@ -534,6 +540,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 	/// <inheritdoc />
 	public TContext CreateNewIDbContextWithExistingTransaction<TContext>(
+		string connectionId,
 		DbTransaction dbTransaction,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
@@ -541,6 +548,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 		where TContext : IDbContext
 	{
 		var result = DbContextFactory.CreateNewIDbContext<TContext, TIdentity>(
+			connectionId,
 			_serviceProvider,
 			dbTransaction,
 			out var newDbContextTransaction,
@@ -558,6 +566,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 	/// <inheritdoc />
 	public TContext GetOrCreateIDbContextWithoutTransaction<TContext>(
+		string connectionId,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
 		string? commandQueryName = null,
@@ -565,6 +574,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 		where TContext : IDbContext
 		=> GetOrCreateIDbContextWithoutTransaction<TContext>(
 			typeof(TContext).FullName!,
+			connectionId,
 			externalDbConnection,
 			connectionString,
 			commandQueryName,
@@ -572,6 +582,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 	/// <inheritdoc />
 	public TContext GetOrCreateIDbContextWithNewTransaction<TContext>(
+		string connectionId,
 		ITransactionCoordinator? transactionCoordinator = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
@@ -581,6 +592,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 		where TContext : IDbContext
 		=> GetOrCreateIDbContextWithNewTransaction<TContext>(
 			typeof(TContext).FullName!,
+			connectionId,
 			transactionCoordinator,
 			transactionIsolationLevel,
 			externalDbConnection,
@@ -590,6 +602,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 	/// <inheritdoc />
 	public TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
+		string connectionId,
 		IDbContextTransaction dbContextTransaction,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
@@ -597,6 +610,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 		where TContext : IDbContext
 		=> GetOrCreateIDbContextWithExistingTransaction<TContext>(
 			typeof(TContext).FullName!,
+			connectionId,
 			dbContextTransaction,
 			transactionCoordinator,
 			commandQueryName,
@@ -604,6 +618,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 	/// <inheritdoc />
 	public TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
+		string connectionId,
 		DbTransaction dbTransaction,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
@@ -611,6 +626,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 		where TContext : IDbContext
 		=> GetOrCreateIDbContextWithExistingTransaction<TContext>(
 			typeof(TContext).FullName!,
+			connectionId,
 			dbTransaction,
 			transactionCoordinator,
 			commandQueryName,
@@ -618,24 +634,24 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 	/// <inheritdoc />
 	public TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
-		IDbTransactionFactory dbTransactionFactory,
 		string connectionId,
+		IDbTransactionFactory dbTransactionFactory,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
 		where TContext : IDbContext
 		=> GetOrCreateIDbContextWithExistingTransaction<TContext>(
 			typeof(TContext).FullName!,
-			dbTransactionFactory,
 			connectionId,
+			dbTransactionFactory,
 			transactionCoordinator,
 			commandQueryName,
 			idCommandQuery);
 
 	/// <inheritdoc />
 	public Task<TContext> GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(
-		IDbTransactionFactory dbTransactionFactory,
 		string connectionId,
+		IDbTransactionFactory dbTransactionFactory,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null,
@@ -643,8 +659,8 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 		where TContext : IDbContext
 		=> GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(
 			typeof(TContext).FullName!,
-			dbTransactionFactory,
 			connectionId,
+			dbTransactionFactory,
 			transactionCoordinator,
 			commandQueryName,
 			idCommandQuery,
@@ -653,6 +669,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 	/// <inheritdoc />
 	public TContext GetOrCreateIDbContextWithoutTransaction<TContext>(
 		string key,
+		string connectionId,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
 		string? commandQueryName = null,
@@ -666,6 +683,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 			key,
 			dbContextType =>
 				DbContextFactory.CreateNewIDbContextWithoutTransaction<TContext, TIdentity>(
+					connectionId,
 					_serviceProvider,
 					externalDbConnection,
 					connectionString,
@@ -678,6 +696,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 	/// <inheritdoc />
 	public TContext GetOrCreateIDbContextWithNewTransaction<TContext>(
 		string key,
+		string connectionId,
 		ITransactionCoordinator? transactionCoordinator = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
@@ -694,6 +713,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 		{
 			var dbContext =
 				DbContextFactory.CreateNewIDbContext<TContext, TIdentity>(
+					connectionId,
 					_serviceProvider,
 					out var newDbContextTransaction,
 					transactionIsolationLevel,
@@ -717,6 +737,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 	/// <inheritdoc />
 	public TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
 		string key,
+		string connectionId,
 		IDbContextTransaction dbContextTransaction,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
@@ -734,6 +755,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 			dbContextType =>
 			{
 				var dbContext = DbContextFactory.CreateNewIDbContext<TContext, TIdentity>(
+					connectionId,
 					_serviceProvider,
 					dbContextTransaction,
 					out var newDbContextTransaction,
@@ -755,6 +777,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 	/// <inheritdoc />
 	public TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
 		string key,
+		string connectionId,
 		DbTransaction dbTransaction,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
@@ -772,6 +795,7 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 			dbContextType =>
 			{
 				var dbContext = DbContextFactory.CreateNewIDbContext<TContext, TIdentity>(
+					connectionId,
 					_serviceProvider,
 					dbTransaction,
 					out var newDbContextTransaction,
@@ -793,8 +817,8 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 	/// <inheritdoc />
 	public TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
 		string key,
-		IDbTransactionFactory dbTransactionFactory,
 		string connectionId,
+		IDbTransactionFactory dbTransactionFactory,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
@@ -811,8 +835,8 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 			dbContextType =>
 			{
 				var dbContext = DbContextFactory.CreateNewIDbContext<TContext, TIdentity>(
-					_serviceProvider,
 					connectionId,
+					_serviceProvider,
 					dbTransactionFactory,
 					out var newDbContextTransaction,
 					commandQueryName,
@@ -836,8 +860,8 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 	/// <inheritdoc />
 	public async Task<TContext> GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(
 		string key,
-		IDbTransactionFactory dbTransactionFactory,
 		string connectionId,
+		IDbTransactionFactory dbTransactionFactory,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null,
@@ -855,8 +879,8 @@ public class DbContextCache<TIdentity> : IDbContextCache, ITransactionCache, IDi
 
 		var (dbContext, newDbContextTransaction) =
 			await DbContextFactory.CreateNewIDbContextAsync<TContext, TIdentity>(
-				_serviceProvider,
 				connectionId,
+				_serviceProvider,
 				dbTransactionFactory,
 				commandQueryName,
 				idCommandQuery,

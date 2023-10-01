@@ -212,12 +212,14 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <summary>
 	/// Creates new not cached <see cref="IDbContext"/> without DB transaction
 	/// </summary>
+	/// <param name="connectionId"></param>
 	/// <param name="externalDbConnection">Use external DB connection</param>
 	/// <param name="connectionString">If externalDbConnection is null, use connection string</param>
 	/// <param name="commandQueryName"></param>
 	/// <param name="idCommandQuery"></param>
 	/// <returns>New <see cref="IDbContext"/> without transaction</returns>
 	TContext CreateNewIDbContext<TContext>(
+		string connectionId,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
 		string? commandQueryName = null,
@@ -227,6 +229,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <summary>
 	/// Creates new not cached <see cref="IDbContext"/> with new DB transaction
 	/// </summary>
+	/// <param name="connectionId"></param>
 	/// <param name="newDbContextTransaction">Created DB transaction</param>
 	/// <param name="transactionCoordinator">Register created transaction</param>
 	/// <param name="transactionIsolationLevel">Create DB transaction with <see cref="IsolationLevel"/></param>
@@ -236,6 +239,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <param name="idCommandQuery"></param>
 	/// <returns>New <see cref="IDbContext"/> with new DB transaction</returns>
 	TContext CreateNewIDbContextWithNewTransaction<TContext>(
+		string connectionId,
 		out IDbContextTransaction newDbContextTransaction,
 		ITransactionCoordinator? transactionCoordinator = null,
 		IsolationLevel? transactionIsolationLevel = null,
@@ -248,12 +252,14 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <summary>
 	/// Creates new not cached <see cref="IDbContext"/> with and reuse DB transaction
 	/// </summary>
+	/// <param name="connectionId"></param>
 	/// <param name="dbContextTransaction">Reuse DB transaction</param>
 	/// <param name="transactionCoordinator"></param>
 	/// <param name="commandQueryName"></param>
 	/// <param name="idCommandQuery"></param>
 	/// <returns>New <see cref="IDbContext"/> with existing DB transaction</returns>
 	TContext CreateNewIDbContextWithExistingTransaction<TContext>(
+		string connectionId,
 		IDbContextTransaction dbContextTransaction,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
@@ -261,6 +267,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 		where TContext : IDbContext;
 
 	TContext CreateNewIDbContextWithExistingTransaction<TContext>(
+		string connectionId,
 		DbTransaction dbTransaction,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
@@ -270,12 +277,14 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <summary>
 	/// Creates new cached <see cref="IDbContext"/> without DB transaction
 	/// </summary>
+	/// <param name="connectionId"></param>
 	/// <param name="externalDbConnection">Use external DB connection</param>
 	/// <param name="connectionString">If externalDbConnection is null, use connection string</param>
 	/// <param name="commandQueryName"></param>
 	/// <param name="idCommandQuery"></param>
 	/// <returns>New <see cref="IDbContext"/> without transaction</returns>
 	TContext GetOrCreateIDbContextWithoutTransaction<TContext>(
+		string connectionId,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
 		string? commandQueryName = null,
@@ -285,6 +294,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <summary>
 	/// Creates new cached <see cref="IDbContext"/> with new DB transaction
 	/// </summary>
+	/// <param name="connectionId"></param>
 	/// <param name="transactionCoordinator">Register created transaction</param>
 	/// <param name="transactionIsolationLevel">Create DB transaction with <see cref="IsolationLevel"/></param>
 	/// <param name="externalDbConnection">Use external DB connection</param>
@@ -293,6 +303,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <param name="idCommandQuery"></param>
 	/// <returns>New <see cref="IDbContext"/> with new DB transaction</returns>
 	TContext GetOrCreateIDbContextWithNewTransaction<TContext>(
+		string connectionId,
 		ITransactionCoordinator? transactionCoordinator = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
@@ -304,12 +315,14 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <summary>
 	/// Creates new cached <see cref="IDbContext"/> with and reuse DB transaction
 	/// </summary>
+	/// <param name="connectionId"></param>
 	/// <param name="dbContextTransaction">Reuse DB transaction</param>
 	/// <param name="transactionCoordinator"></param>
 	/// <param name="commandQueryName"></param>
 	/// <param name="idCommandQuery"></param>
 	/// <returns>New <see cref="IDbContext"/> with existing DB transaction</returns>
 	TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
+		string connectionId,
 		IDbContextTransaction dbContextTransaction,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
@@ -317,6 +330,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 		where TContext : IDbContext;
 
 	TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
+		string connectionId,
 		DbTransaction dbTransaction,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
@@ -324,16 +338,16 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 		where TContext : IDbContext;
 
 	TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
-		IDbTransactionFactory dbTransactionFactory,
 		string connectionId,
+		IDbTransactionFactory dbTransactionFactory,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
 		where TContext : IDbContext;
 
 	Task<TContext> GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(
-		IDbTransactionFactory dbTransactionFactory,
 		string connectionId,
+		IDbTransactionFactory dbTransactionFactory,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null,
@@ -344,6 +358,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// Creates new cached <see cref="IDbContext"/> without DB transaction
 	/// </summary>
 	/// <param name="key">Cache key. Default is <see cref="IDbContext"/>.FullName </param>
+	/// <param name="connectionId"></param>
 	/// <param name="externalDbConnection">Use external DB connection</param>
 	/// <param name="connectionString">If externalDbConnection is null, use connection string</param>
 	/// <param name="commandQueryName"></param>
@@ -351,6 +366,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <returns>New <see cref="IDbContext"/> without transaction</returns>
 	TContext GetOrCreateIDbContextWithoutTransaction<TContext>(
 		string key,
+		string connectionId,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
 		string? commandQueryName = null,
@@ -361,6 +377,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// Creates new cached <see cref="IDbContext"/> with new DB transaction
 	/// </summary>
 	/// <param name="key">Cache key. Default is <see cref="IDbContext"/>.FullName </param>
+	/// <param name="connectionId"></param>
 	/// <param name="transactionCoordinator">Register created transaction</param>
 	/// <param name="transactionIsolationLevel">Create DB transaction with <see cref="IsolationLevel"/></param>
 	/// <param name="externalDbConnection">Use external DB connection</param>
@@ -370,6 +387,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <returns>New <see cref="IDbContext"/> with new DB transaction</returns>
 	TContext GetOrCreateIDbContextWithNewTransaction<TContext>(
 		string key,
+		string connectionId,
 		ITransactionCoordinator? transactionCoordinator = null,
 		IsolationLevel? transactionIsolationLevel = null,
 		DbConnection? externalDbConnection = null,
@@ -382,6 +400,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// Creates new cached <see cref="IDbContext"/> with and reuse DB transaction
 	/// </summary>
 	/// <param name="key">Cache key. Default is <see cref="IDbContext"/>.FullName </param>
+	/// <param name="connectionId"></param>
 	/// <param name="dbContextTransaction">Reuse DB transaction</param>
 	/// <param name="transactionCoordinator"></param>
 	/// <param name="commandQueryName"></param>
@@ -389,6 +408,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <returns>New <see cref="IDbContext"/> with existing DB transaction</returns>
 	TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
 		string key,
+		string connectionId,
 		IDbContextTransaction dbContextTransaction,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
@@ -397,6 +417,7 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 
 	TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
 		string key,
+		string connectionId,
 		DbTransaction dbTransaction,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
@@ -406,8 +427,8 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <inheritdoc />
 	TContext GetOrCreateIDbContextWithExistingTransaction<TContext>(
 		string key,
-		IDbTransactionFactory dbTransactionFactory,
 		string connectionId,
+		IDbTransactionFactory dbTransactionFactory,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null)
@@ -416,8 +437,8 @@ public interface IDbContextCache : ITransactionCache, IDisposable, IAsyncDisposa
 	/// <inheritdoc />
 	Task<TContext> GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(
 		string key,
-		IDbTransactionFactory dbTransactionFactory,
 		string connectionId,
+		IDbTransactionFactory dbTransactionFactory,
 		ITransactionCoordinator? transactionCoordinator = null,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null,

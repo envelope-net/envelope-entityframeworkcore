@@ -16,8 +16,8 @@ public static class TransactionCoordinatorExtensions
 
 		return transactionCoordinator.TransactionController.GetTransactionCache<IDbContextCache>()
 			.GetOrCreateIDbContextWithExistingTransaction<TContext>(
-				transactionCoordinator.TransactionController.GetTransactionCache<IDbTransactionFactory>(),
 				connectionId,
+				transactionCoordinator.TransactionController.GetTransactionCache<IDbTransactionFactory>(),
 				transactionCoordinator,
 				null,
 				null);
@@ -29,7 +29,7 @@ public static class TransactionCoordinatorExtensions
 		where TContext : IDbContext
 	{
 		var dbContext = GetOrCreateDbContextWithNewTransaction<TContext>(transactionCoordinator, connectionId);
-		return dbContext.CreateQueryOptions(connectionId);
+		return dbContext.CreateQueryOptions(transactionCoordinator);
 	}
 
 	public static Task<TContext> GetOrCreateDbContextWithNewTransactionAsync<TContext>(
@@ -43,8 +43,8 @@ public static class TransactionCoordinatorExtensions
 
 		return transactionCoordinator.TransactionController.GetTransactionCache<IDbContextCache>()
 			.GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(
-				transactionCoordinator.TransactionController.GetTransactionCache<IDbTransactionFactory>(),
 				connectionId,
+				transactionCoordinator.TransactionController.GetTransactionCache<IDbTransactionFactory>(),
 				transactionCoordinator,
 				null,
 				null,
@@ -58,6 +58,6 @@ public static class TransactionCoordinatorExtensions
 		where TContext : IDbContext
 	{
 		var dbContext = await GetOrCreateDbContextWithNewTransactionAsync<TContext>(transactionCoordinator, connectionId, cancellationToken);
-		return dbContext.CreateQueryOptions(connectionId);
+		return dbContext.CreateQueryOptions(transactionCoordinator);
 	}
 }

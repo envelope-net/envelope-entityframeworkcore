@@ -1,4 +1,5 @@
-﻿using Envelope.Transactions;
+﻿using Envelope.Exceptions;
+using Envelope.Transactions;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using System.Data.Common;
@@ -10,26 +11,27 @@ public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 {
 	private bool _disposed;
 
-	public TContext? Context { get; }
-	public string? ConnectionId { get; }
-	public ContextFactory<TContext> ContextFactory { get; }
-	public DbConnection? ExternalDbConnection { get; }
-	public string? ConnectionString { get; }
-	public IDbContextTransaction? DbContextTransaction { get; }
-	public ITransactionCoordinator? TransactionCoordinator { get; }
+	private TContext? _context;
+	private string? _connectionId;
+	private ContextFactory<TContext> _contextFactory;
+	private DbConnection? _externalDbConnection;
+	private string? _connectionString;
+	private IDbContextTransaction? _dbontextTransaction;
+	private ITransactionCoordinator? _transactionCoordinator;
 
-	public static QueryOptions<TContext> Create<TOtherContext>(QueryOptions<TOtherContext> context)
+	public TContext? Context => _context;
+
+	public static QueryOptions<TContext> Create<TOtherContext>(QueryOptions<TOtherContext> queryOptions)
 		where TOtherContext : IDbContext
 	{
-		if (context == null)
-			throw new ArgumentNullException(nameof(context));
+		Throw.ArgumentNull(queryOptions);
 
 		return new QueryOptions<TContext>(
-			ContextFactory<TContext>.Create(context.ContextFactory),
-			context.ExternalDbConnection,
-			context.ConnectionString,
-			context.DbContextTransaction,
-			context.TransactionCoordinator);
+			ContextFactory<TContext>.Create(queryOptions._contextFactory),
+			queryOptions._externalDbConnection,
+			queryOptions._connectionString,
+			queryOptions._dbontextTransaction,
+			queryOptions._transactionCoordinator);
 	}
 
 	private QueryOptions(
@@ -39,60 +41,58 @@ public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 		IDbContextTransaction? dbContextTransaction,
 		ITransactionCoordinator? transactionCoordinator)
 	{
-		ContextFactory = contextFactory;
-		ExternalDbConnection = externalDbConnection;
-		ConnectionString = connectionString;
-		DbContextTransaction = dbContextTransaction;
-		TransactionCoordinator = transactionCoordinator;
-	}
-
-	public ITransactionCoordinator? GetTransactionCoordinator()
-		=> TransactionCoordinator ?? ContextFactory?.GetTransactionCoordinator();
-
-	public QueryOptions(IServiceProvider serviceProvider)
-	{
-		if (serviceProvider == null)
-			throw new ArgumentNullException(nameof(serviceProvider));
-
-		ContextFactory = serviceProvider.GetRequiredService<ContextFactory<TContext>>();
+		_contextFactory = contextFactory;
+		_externalDbConnection = externalDbConnection;
+		_connectionString = connectionString;
+		_dbontextTransaction = dbContextTransaction;
+		_transactionCoordinator = transactionCoordinator;
 	}
 
 	public QueryOptions(ContextFactory<TContext> contextFactory)
 	{
-		ContextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
+		Throw.ArgumentNull(contextFactory);
+		_contextFactory = contextFactory;
+		_transactionCoordinator = _contextFactory.GetTransactionCoordinator();
+	}
+
+	public QueryOptions(IServiceProvider serviceProvider)
+		: this(serviceProvider?.GetRequiredService<ContextFactory<TContext>>()!)
+	{
 	}
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 	
-	internal QueryOptions(TContext context, string? connectionId)
+	internal QueryOptions(TContext context, ITransactionCoordinator transactionCoordinator)
 	{
-		Context = context ?? throw new ArgumentNullException(nameof(context));
-		ConnectionId = connectionId;
+		_context = context ?? throw new ArgumentNullException(nameof(context));
+		_transactionCoordinator = transactionCoordinator ?? throw new ArgumentNullException(nameof(transactionCoordinator));
 	}
 
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+	//zatial nikdy nepouzivane
+	//public QueryOptions(IServiceProvider serviceProvider, DbConnection? externalDbConnection, string? connectionString)
+	//	: this(serviceProvider)
+	//{
+	//	if (externalDbConnection == null && string.IsNullOrWhiteSpace(connectionString))
+	//		throw new InvalidOperationException($"{nameof(externalDbConnection)} == null AND {nameof(connectionString)} == null");
 
-	public QueryOptions(IServiceProvider serviceProvider, DbConnection? externalDbConnection, string? connectionString)
-		: this(serviceProvider)
-	{
-		if (externalDbConnection == null && string.IsNullOrWhiteSpace(connectionString))
-			throw new InvalidOperationException($"{nameof(externalDbConnection)} == null AND {nameof(connectionString)} == null");
+	//	_externalDbConnection = externalDbConnection;
+	//	_connectionString = connectionString;
+	//}
 
-		ExternalDbConnection = externalDbConnection;
-		ConnectionString = connectionString;
-	}
+	//zatial nikdy nepouzivane
+	//public QueryOptions(IServiceProvider serviceProvider, IDbContextTransaction dbContextTransaction)
+	//	: this(serviceProvider)
+	//{
+	//	_dbontextTransaction = dbContextTransaction ?? throw new ArgumentNullException(nameof(dbContextTransaction));
+	//}
 
-	public QueryOptions(IServiceProvider serviceProvider, IDbContextTransaction dbContextTransaction)
-		: this(serviceProvider)
-	{
-		DbContextTransaction = dbContextTransaction ?? throw new ArgumentNullException(nameof(dbContextTransaction));
-	}
-
-	public QueryOptions(IServiceProvider serviceProvider, ITransactionCoordinator transactionCoordinator)
-		: this(serviceProvider)
-	{
-		TransactionCoordinator = transactionCoordinator ?? throw new ArgumentNullException(nameof(transactionCoordinator));
-	}
+	//zatial nikdy nepouzivane
+	//public QueryOptions(IServiceProvider serviceProvider, ITransactionCoordinator transactionCoordinator)
+	//	: this(serviceProvider)
+	//{
+	//	_transactionCoordinator = transactionCoordinator ?? throw new ArgumentNullException(nameof(transactionCoordinator));
+	//}
 
 	public QueryOptions(ContextFactory<TContext> contextFactory, DbConnection? externalDbConnection, string? connectionString)
 		: this(contextFactory)
@@ -100,51 +100,59 @@ public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 		if (externalDbConnection == null && string.IsNullOrWhiteSpace(connectionString))
 			throw new InvalidOperationException($"{nameof(externalDbConnection)} == null AND {nameof(connectionString)} == null");
 
-		ExternalDbConnection = externalDbConnection;
-		ConnectionString = connectionString;
+		_externalDbConnection = externalDbConnection;
+		_connectionString = connectionString;
 	}
 
 	public QueryOptions(ContextFactory<TContext> contextFactory, IDbContextTransaction dbContextTransaction)
 		: this(contextFactory)
 	{
-		DbContextTransaction = dbContextTransaction ?? throw new ArgumentNullException(nameof(dbContextTransaction));
+		_dbontextTransaction = dbContextTransaction ?? throw new ArgumentNullException(nameof(dbContextTransaction));
 	}
 
-	public QueryOptions(ContextFactory<TContext> contextFactory, ITransactionCoordinator transactionCoordinator)
-		: this(contextFactory)
-	{
-		TransactionCoordinator = transactionCoordinator ?? throw new ArgumentNullException(nameof(transactionCoordinator));
-	}
+	//zatial nikdy nepouzivane
+	//public QueryOptions(ContextFactory<TContext> contextFactory, ITransactionCoordinator transactionCoordinator)
+	//	: this(contextFactory)
+	//{
+	//	_transactionCoordinator = transactionCoordinator ?? throw new ArgumentNullException(nameof(transactionCoordinator));
+	//}
 
-	public Task<TContext> GetContextAsync(
+	public ITransactionCoordinator? GetTransactionCoordinator()
+		=> _transactionCoordinator ??= _contextFactory?.GetTransactionCoordinator();
+
+	public async Task<TContext> GetContextAsync(
 		string connectionId,
 		CancellationToken cancellationToken = default)
 	{
-		if (Context != null)
+		if (_context != null)
 		{
-			return Task.FromResult(Context);
+			return _context;
 		}
-		else if (TransactionCoordinator != null)
+		else if (_transactionCoordinator != null)
 		{
 			if (string.IsNullOrWhiteSpace(connectionId))
-				connectionId = ConnectionId!;
+				connectionId = _connectionId!;
 
-			return ContextFactory.GetOrCreateDbContextWithNewTransactionAsync(TransactionCoordinator, connectionId, cancellationToken);
+			_context = await _contextFactory.GetOrCreateDbContextWithNewTransactionAsync(connectionId, _transactionCoordinator, cancellationToken);
+			return _context;
 		}
-		else if (DbContextTransaction != null)
+		else if (_dbontextTransaction != null)
 		{
-			return Task.FromResult(ContextFactory.GetOrCreateDbContextWithExistingTransaction(DbContextTransaction));
+			_context = _contextFactory.GetOrCreateDbContextWithExistingTransaction(connectionId, _dbontextTransaction);
+			return _context;
 		}
-		else if (ExternalDbConnection != null || !string.IsNullOrWhiteSpace(ConnectionString))
+		else if (_externalDbConnection != null || !string.IsNullOrWhiteSpace(_connectionString))
 		{
-			return Task.FromResult(ContextFactory.GetOrCreateDbContextWithoutTransaction(ExternalDbConnection, ConnectionString));
+			_context = _contextFactory.GetOrCreateDbContextWithoutTransaction(connectionId, _externalDbConnection, _connectionString);
+			return _context;
 		}
 		else
 		{
 			if (string.IsNullOrWhiteSpace(connectionId))
-				connectionId = ConnectionId!;
+				connectionId = _connectionId!;
 
-			return ContextFactory.GetOrCreateDbContextWithNewTransactionAsync(connectionId, cancellationToken);
+			_context = await _contextFactory.GetOrCreateDbContextWithNewTransactionAsync(connectionId, cancellationToken);
+			return _context;
 		}
 	}
 
@@ -163,23 +171,23 @@ public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 
 	protected virtual async ValueTask DisposeAsyncCoreAsync()
 	{
-		if (ContextFactory != null)
-			await ContextFactory.DisposeAsync();
+		if (_contextFactory != null)
+			await _contextFactory.DisposeAsync();
 
-		if (TransactionCoordinator != null)
-			await TransactionCoordinator.DisposeAsync();
+		if (_transactionCoordinator != null)
+			await _transactionCoordinator.DisposeAsync();
 
 		try
 		{
-			if (DbContextTransaction != null)
-				await DbContextTransaction.DisposeAsync();
+			if (_dbontextTransaction != null)
+				await _dbontextTransaction.DisposeAsync();
 		}
 		catch { }
 
 		try
 		{
-			if (ExternalDbConnection != null)
-				await ExternalDbConnection.DisposeAsync();
+			if (_externalDbConnection != null)
+				await _externalDbConnection.DisposeAsync();
 		}
 		catch { }
 	}
@@ -193,23 +201,23 @@ public class QueryOptions<TContext> : IDisposable, IAsyncDisposable
 
 		if (disposing)
 		{
-			if (ContextFactory != null)
-				ContextFactory.Dispose();
+			if (_contextFactory != null)
+				_contextFactory.Dispose();
 
-			if (TransactionCoordinator != null)
-				TransactionCoordinator.Dispose();
+			if (_transactionCoordinator != null)
+				_transactionCoordinator.Dispose();
 
 			try
 			{
-				if (DbContextTransaction != null)
-					DbContextTransaction.Dispose();
+				if (_dbontextTransaction != null)
+					_dbontextTransaction.Dispose();
 			}
 			catch { }
 
 			try
 			{
-				if (ExternalDbConnection != null)
-					ExternalDbConnection.Dispose();
+				if (_externalDbConnection != null)
+					_externalDbConnection.Dispose();
 			}
 			catch { }
 		}
