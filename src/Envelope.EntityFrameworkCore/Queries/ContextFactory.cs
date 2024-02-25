@@ -52,19 +52,22 @@ public class ContextFactory<TContext> : IDisposable, IAsyncDisposable
 		_transactionCoordinator = new(() => ServiceProvider.GetRequiredService<ITransactionCoordinator>());
 	}
 
-	public TContext GetOrCreateDbContextWithoutTransaction(DbConnection? externalDbConnection = null, string? connectionString = null)
+	public TContext GetOrCreateDbContextWithoutTransaction(string connectionId, DbConnection? externalDbConnection = null, string? connectionString = null)
 		=> _transactionCoordinator.Value.TransactionController.GetTransactionCache<IDbContextCache>()
-			.GetOrCreateIDbContextWithoutTransaction<TContext>(externalDbConnection, connectionString, null, null);
+			.GetOrCreateIDbContextWithoutTransaction<TContext>(connectionId, externalDbConnection, connectionString, null, null);
 
-	public TContext GetOrCreateDbContextWithExistingTransaction(IDbContextTransaction dbContextTransaction)
+	public TContext GetOrCreateDbContextWithExistingTransaction(string connectionId, IDbContextTransaction dbContextTransaction)
 		=> _transactionCoordinator.Value.TransactionController.GetTransactionCache<IDbContextCache>()
-			.GetOrCreateIDbContextWithExistingTransaction<TContext>(dbContextTransaction, null, null, null);
-
-	public Task<TContext> GetOrCreateDbContextWithNewTransactionAsync(CancellationToken cancellationToken = default)
-		=> _transactionCoordinator.Value.TransactionController.GetTransactionCache<IDbContextCache>()
-			.GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(_transactionCoordinator.Value.TransactionController.GetTransactionCache<IDbTransactionFactory>(), _transactionCoordinator.Value, null, null, cancellationToken);
+			.GetOrCreateIDbContextWithExistingTransaction<TContext>(connectionId, dbContextTransaction, null, null, null);
 
 	public Task<TContext> GetOrCreateDbContextWithNewTransactionAsync(
+		string connectionId,
+		CancellationToken cancellationToken = default)
+		=> _transactionCoordinator.Value.TransactionController.GetTransactionCache<IDbContextCache>()
+			.GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(connectionId, _transactionCoordinator.Value.TransactionController.GetTransactionCache<IDbTransactionFactory>(), _transactionCoordinator.Value, null, null, cancellationToken);
+
+	public Task<TContext> GetOrCreateDbContextWithNewTransactionAsync(
+		string connectionId,
 		ITransactionCoordinator transactionCoordinator,
 		CancellationToken cancellationToken = default)
 	{
@@ -74,6 +77,7 @@ public class ContextFactory<TContext> : IDisposable, IAsyncDisposable
 		var cache = transactionCoordinator.TransactionController.GetTransactionCache<IDbContextCache>();
 		var result =
 			cache.GetOrCreateIDbContextWithExistingTransactionAsync<TContext>(
+				connectionId,
 				transactionCoordinator.TransactionController.GetTransactionCache<IDbTransactionFactory>(),
 				transactionCoordinator,
 				null,

@@ -13,6 +13,7 @@ namespace Envelope.EntityFrameworkCore;
 
 public interface IDbContext : IDisposable, IAsyncDisposable
 {
+	string ConnectionId { get; }
 	DbConnection DbConnection { get; }
 	IDbContextTransaction? DbContextTransaction { get; }
 	DbTransaction? DbTransaction { get; }

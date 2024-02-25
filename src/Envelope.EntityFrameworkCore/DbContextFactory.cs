@@ -65,6 +65,7 @@ public static partial class DbContextFactory
 
 	public static TContext CreateNewDbContext<TContext>(
 		IServiceProvider serviceProvider,
+		string connectionId,
 		IDbTransactionFactory dbTransactionFactory,
 		out IDbContextTransaction? newDbContextTransaction,
 		string? commandQueryName = null,
@@ -77,7 +78,7 @@ public static partial class DbContextFactory
 		if (dbTransactionFactory == null)
 			throw new ArgumentNullException(nameof(dbTransactionFactory));
 
-		dbTransactionFactory.Initialize();
+		dbTransactionFactory.Initialize(connectionId);
 
 		var dbContext = serviceProvider.GetRequiredService<TContext>();
 		if (dbContext is DbContextBase dbContextBase)
@@ -93,6 +94,7 @@ public static partial class DbContextFactory
 
 	public static async Task<(TContext dbContext, IDbContextTransaction? newDbContextTransaction)> CreateNewDbContextAsync<TContext>(
 		IServiceProvider serviceProvider,
+		string connectionId,
 		IDbTransactionFactory dbTransactionFactory,
 		string? commandQueryName = null,
 		Guid? idCommandQuery = null,
@@ -105,7 +107,7 @@ public static partial class DbContextFactory
 		if (dbTransactionFactory == null)
 			throw new ArgumentNullException(nameof(dbTransactionFactory));
 
-		await dbTransactionFactory.InitializeAsync();
+		await dbTransactionFactory.InitializeAsync(connectionId);
 
 		var context = serviceProvider.GetRequiredService<TContext>();
 		if (context is DbContextBase dbContextBase)
@@ -318,6 +320,7 @@ public static partial class DbContextFactory
 	}
 
 	public static TContext CreateNewIDbContext<TContext>(
+		string connectionId,
 		IServiceProvider serviceProvider,
 		IDbContextTransaction existingDbContextTransaction,
 		out IDbContextTransaction? newDbContextTransaction,
@@ -334,6 +337,7 @@ public static partial class DbContextFactory
 		var dbContext = serviceProvider.GetRequiredService<TContext>();
 		if (dbContext is DbContextBase dbContextBase)
 		{
+			dbContextBase.ConnectionId = connectionId;
 			dbContextBase.CommandQueryName = commandQueryName;
 			dbContextBase.IdCommandQuery = idCommandQuery;
 			dbContextBase.SetExternalConnection(
@@ -347,6 +351,7 @@ public static partial class DbContextFactory
 	}
 
 	public static TContext CreateNewIDbContext<TContext>(
+		string connectionId,
 		IServiceProvider serviceProvider,
 		DbTransaction existingTransaction,
 		out IDbContextTransaction? newDbContextTransaction,
@@ -363,6 +368,7 @@ public static partial class DbContextFactory
 		var dbContext = serviceProvider.GetRequiredService<TContext>();
 		if (dbContext is DbContextBase dbContextBase)
 		{
+			dbContextBase.ConnectionId = connectionId;
 			dbContextBase.CommandQueryName = commandQueryName;
 			dbContextBase.IdCommandQuery = idCommandQuery;
 			dbContextBase.SetExternalConnection(existingTransaction.Connection, null);
@@ -374,6 +380,7 @@ public static partial class DbContextFactory
 	}
 
 	public static TContext CreateNewIDbContext<TContext>(
+		string connectionId,
 		IServiceProvider serviceProvider,
 		IDbTransactionFactory dbTransactionFactory,
 		out IDbContextTransaction? newDbContextTransaction,
@@ -387,11 +394,12 @@ public static partial class DbContextFactory
 		if (dbTransactionFactory == null)
 			throw new ArgumentNullException(nameof(dbTransactionFactory));
 
-		dbTransactionFactory.Initialize();
+		dbTransactionFactory.Initialize(connectionId);
 
 		var dbContext = serviceProvider.GetRequiredService<TContext>();
 		if (dbContext is DbContextBase dbContextBase)
 		{
+			dbContextBase.ConnectionId = connectionId;
 			dbContextBase.CommandQueryName = commandQueryName;
 			dbContextBase.IdCommandQuery = idCommandQuery;
 			dbContextBase.SetExternalConnection(dbTransactionFactory.DbConnection, null);
@@ -404,6 +412,7 @@ public static partial class DbContextFactory
 	}
 
 	public static async Task<(TContext dbContext, IDbContextTransaction? newDbContextTransaction)> CreateNewIDbContextAsync<TContext>(
+		string connectionId,
 		IServiceProvider serviceProvider,
 		IDbTransactionFactory dbTransactionFactory,
 		string? commandQueryName = null,
@@ -417,11 +426,12 @@ public static partial class DbContextFactory
 		if (dbTransactionFactory == null)
 			throw new ArgumentNullException(nameof(dbTransactionFactory));
 
-		await dbTransactionFactory.InitializeAsync();
+		await dbTransactionFactory.InitializeAsync(connectionId);
 
 		var context = serviceProvider.GetRequiredService<TContext>();
 		if (context is DbContextBase dbContextBase)
 		{
+			dbContextBase.ConnectionId = connectionId;
 			dbContextBase.CommandQueryName = commandQueryName;
 			dbContextBase.IdCommandQuery = idCommandQuery;
 			dbContextBase.SetExternalConnection(dbTransactionFactory.DbConnection, null);
@@ -434,6 +444,7 @@ public static partial class DbContextFactory
 	}
 
 	public static TContext CreateNewIDbContext<TContext>(
+		string connectionId,
 		IServiceProvider serviceProvider,
 		out IDbContextTransaction newDbContextTransaction,
 		IsolationLevel? transactionIsolationLevel = null,
@@ -449,6 +460,7 @@ public static partial class DbContextFactory
 		var dbContext = serviceProvider.GetRequiredService<TContext>();
 		if (dbContext is DbContextBase dbContextBase)
 		{
+			dbContextBase.ConnectionId = connectionId;
 			dbContextBase.CommandQueryName = commandQueryName;
 			dbContextBase.IdCommandQuery = idCommandQuery;
 			dbContextBase.SetExternalConnection(externalDbConnection, connectionString);
@@ -460,6 +472,7 @@ public static partial class DbContextFactory
 	}
 
 	public static TContext CreateNewIDbContextWithoutTransaction<TContext>(
+		string connectionId,
 		IServiceProvider serviceProvider,
 		DbConnection? externalDbConnection = null,
 		string? connectionString = null,
@@ -473,6 +486,7 @@ public static partial class DbContextFactory
 		var dbContext = serviceProvider.GetRequiredService<TContext>();
 		if (dbContext is DbContextBase dbContextBase)
 		{
+			dbContextBase.ConnectionId = connectionId;
 			dbContextBase.CommandQueryName = commandQueryName;
 			dbContextBase.IdCommandQuery = idCommandQuery;
 			dbContextBase.SetExternalConnection(externalDbConnection, connectionString);

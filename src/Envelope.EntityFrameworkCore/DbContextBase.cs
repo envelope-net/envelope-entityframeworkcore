@@ -26,6 +26,8 @@ public abstract class DbContextBase : Microsoft.EntityFrameworkCore.DbContext, I
 	//protected Func<bool>? IsTransactionCommittedDelegate { get; private set; }
 	protected internal QueryCacheManager QueryCacheManager { get; private set; }
 
+	public string ConnectionId { get; internal set; }
+
 	private DbConnection? dbConnection;
 	public DbConnection DbConnection
 	{
